@@ -76,7 +76,7 @@
             display: block;
         }
 
-        /* Menu Superior do Cliente */
+        /* Menus Superiores (Cliente e Admin) */
         .top-subnav {
             display: flex;
             justify-content: space-between;
@@ -107,7 +107,7 @@
             color: var(--white);
         }
 
-        /* Menu Inferior do Cliente */
+        /* Menus Inferiores */
         nav {
             position: fixed;
             bottom: 0;
@@ -260,7 +260,7 @@
 </head>
 <body>
 
-    <div id="notification-banner">🔔 Novo prato adicionado ao cardápio!</div>
+    <div id="notification-banner">🔔 Notificação</div>
 
     <header>
         <span id="app-title">🍔 Meu Delivery</span>
@@ -273,17 +273,15 @@
             <div id="auth-container" class="card">
                 <h2 id="auth-titulo" style="text-align: center; margin-bottom: 15px;">Entrar no App</h2>
                 
-                <!-- Campos visíveis tanto no login quanto no cadastro -->
                 <input type="email" id="auth-email" placeholder="Seu e-mail">
                 <input type="password" id="auth-senha" placeholder="Sua senha">
 
-                <!-- Campos extras exclusivos para Cadastro -->
                 <div id="campos-cadastro" style="display: none;">
                     <input type="text" id="reg-nome" placeholder="Seu Nome Completo">
                     <input type="text" id="reg-endereco" placeholder="Endereço (Rua, Número)">
                     <input type="text" id="reg-bairro" placeholder="Bairro">
                     <input type="text" id="reg-cidade" placeholder="Cidade">
-                    <input type="text" id="reg-referencia" placeholder="Ponto de Referência (Ex: Próximo à praça)">
+                    <input type="text" id="reg-referencia" placeholder="Ponto de Referência">
                 </div>
 
                 <button id="btn-acao-auth" class="btn-primary" onclick="fazerLogin()">Entrar</button>
@@ -345,11 +343,11 @@
                 </div>
             </div>
 
-            <!-- Aba Perfil / Endereço (Editável) -->
+            <!-- Aba Perfil / Endereço -->
             <div id="tab-perfil" class="cliente-tab" style="display:none;">
                 <h2>Meu Perfil e Endereço</h2>
                 <div class="card">
-                    <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">Mantenha seus dados atualizados para facilitar a entrega do seu pedido.</p>
+                    <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">Mantenha seus dados atualizados para facilitar a entrega.</p>
                     
                     <label style="font-weight: bold; font-size: 0.9rem;">Nome Completo:</label>
                     <input type="text" id="perfil-nome" placeholder="Seu Nome">
@@ -364,9 +362,26 @@
                     <input type="text" id="perfil-cidade" placeholder="Sua Cidade">
 
                     <label style="font-weight: bold; font-size: 0.9rem;">Ponto de Referência:</label>
-                    <input type="text" id="perfil-referencia" placeholder="Ex: Próximo à farmácia do Zé">
+                    <input type="text" id="perfil-referencia" placeholder="Ex: Próximo à farmácia">
 
                     <button class="btn-primary" onclick="salvarPerfilCliente()">Salvar Alterações</button>
+                </div>
+            </div>
+
+            <!-- Aba Avaliação (Aparece apenas se tiver pedido concluído e não avaliado) -->
+            <div id="tab-perfil-avaliacao" class="cliente-tab" style="display:none;">
+                <h2>Avalie o Atendimento</h2>
+                <div class="card">
+                    <p>Como foi sua experiência geral com o último pedido?</p>
+                    <select id="nota-avaliacao">
+                        <option value="5">⭐⭐⭐⭐⭐ - Excelente</option>
+                        <option value="4">⭐⭐⭐⭐ - Muito Bom</option>
+                        <option value="3">⭐⭐⭐ - Regular</option>
+                        <option value="2">⭐⭐ - Ruim</option>
+                        <option value="1">⭐ - Péssimo</option>
+                    </select>
+                    <textarea id="comentario-avaliacao" placeholder="Deixe um comentário..."></textarea>
+                    <button class="btn-primary" onclick="enviarAvaliacao()">Enviar Avaliação</button>
                 </div>
             </div>
 
@@ -375,8 +390,14 @@
         <!-- ================= VISÃO DO ADMINISTRADOR ================= -->
         <div id="view-admin" class="view-section">
             
+            <!-- Menu Superior do Admin (Vitrine e Pedidos) -->
+            <div class="top-subnav">
+                <button id="btn-admin-sub-vitrine" class="active" onclick="mudarAbaAdminSuperior('vitrine')">🍔 Vitrine</button>
+                <button id="btn-admin-sub-pedidos" onclick="mudarAbaAdminSuperior('pedidos')">📦 Pedidos</button>
+            </div>
+
+            <!-- Admin: Vitrine -->
             <div id="admin-tab-vitrine" class="admin-tab">
-                <h2>Gerenciar Vitrine</h2>
                 <div class="card">
                     <h3>Cadastrar Produto</h3>
                     <input type="text" id="adm-nome-produto" placeholder="Nome do Produto">
@@ -387,7 +408,7 @@
                         <option value="disponivel">Disponível</option>
                         <option value="indisponivel">Indisponível (Esgotado)</option>
                     </select>
-                    <button class="btn-primary" onclick="cadastrarProduto()">Salvar Produto e Alertar Clientes</button>
+                    <button class="btn-primary" onclick="cadastrarProduto()">Salvar Produto e Alertar</button>
                 </div>
 
                 <h2>Produtos Cadastrados</h2>
@@ -396,7 +417,7 @@
                 </div>
             </div>
 
-            <!-- Admin: Pedidos (Agora exibe o endereço completo e referência do cliente) -->
+            <!-- Admin: Pedidos -->
             <div id="admin-tab-pedidos" class="admin-tab" style="display:none;">
                 <h2>Pedidos Recebidos</h2>
                 <div id="lista-pedidos-admin">
@@ -404,6 +425,7 @@
                 </div>
             </div>
 
+            <!-- Admin: Avaliações -->
             <div id="admin-tab-avaliacoes" class="admin-tab" style="display:none;">
                 <h2>Avaliações dos Clientes</h2>
                 <div id="lista-avaliacoes-admin">
@@ -411,6 +433,7 @@
                 </div>
             </div>
 
+            <!-- Admin: Promoções -->
             <div id="admin-tab-mensagens" class="admin-tab" style="display:none;">
                 <h2>Enviar Cupom / Mensagem</h2>
                 <div class="card">
@@ -426,15 +449,14 @@
     <!-- Menu Inferior do Cliente -->
     <nav id="nav-cliente" style="display:none;">
         <button id="nav-btn-promocoes" onclick="mudarAbaCliente('promocoes')">🎁 Cupons</button>
-        <button id="nav-btn-perfil" onclick="mudarAbaCliente('perfil')">👤 Meu Perfil</button>
+        <button id="nav-btn-perfil" onclick="mudarAbaCliente('perfil')">👤 Perfil</button>
+        <button id="nav-btn-perfil-avaliacao" onclick="mudarAbaCliente('perfil-avaliacao')" style="display:none;">⭐ Avaliar</button>
     </nav>
 
-    <!-- Menu de Navegação do Administrador -->
+    <!-- Menu Inferior do Administrador (Avaliações e Promoções) -->
     <nav id="nav-admin" style="display:none;">
-        <button onclick="mudarAbaAdmin('vitrine')" class="active">🍔 Vitrine</button>
-        <button onclick="mudarAbaAdmin('pedidos')">📦 Pedidos</button>
-        <button onclick="mudarAbaAdmin('avaliacoes')">⭐ Avaliações</button>
-        <button onclick="mudarAbaAdmin('mensagens')">📢 Promoções</button>
+        <button id="nav-btn-admin-avaliacoes" onclick="mudarAbaAdminInferior('avaliacoes')">⭐ Avaliações</button>
+        <button id="nav-btn-admin-mensagens" onclick="mudarAbaAdminInferior('mensagens')">📢 Promoções</button>
     </nav>
 
     <!-- Scripts do Firebase -->
@@ -463,11 +485,13 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        const ADMIN_EMAIL = "giliardmartins31@gmail.com"
+        const ADMIN_EMAIL = "giliardmartins31@gmail.com"; 
+
         let usuarioAtual = null;
         let carrinho = [];
         let timerIntervalos = {};
         let modoCadastroAtivo = false;
+        let pedidoConcluidoNaoAvaliadoId = null;
 
         auth.onAuthStateChanged((user) => {
             if (user) {
@@ -481,6 +505,7 @@
                     document.getElementById('nav-admin').style.display = 'flex';
                     document.getElementById('nav-cliente').style.display = 'none';
                     document.getElementById('app-title').innerText = '🛠️ Painel Admin';
+                    mudarAbaAdminSuperior('vitrine');
                     carregarProdutosAdmin();
                     carregarAvaliacoesAdmin();
                     carregarPedidosAdmin();
@@ -507,6 +532,14 @@
                 document.getElementById('app-title').innerText = '🍔 Meu Delivery';
             }
         });
+
+        function mostrarBannerNotificacao(texto, cor = '#2ed573') {
+            const banner = document.getElementById('notification-banner');
+            banner.innerText = texto;
+            banner.style.background = cor;
+            banner.style.display = 'block';
+            setTimeout(() => { banner.style.display = 'none'; }, 4000);
+        }
 
         function alternarTelaCadastro() {
             modoCadastroAtivo = !modoCadastroAtivo;
@@ -537,7 +570,7 @@
             const email = document.getElementById('auth-email').value;
             const senha = document.getElementById('auth-senha').value;
             auth.signInWithEmailAndPassword(email, senha)
-                .catch(error => alert("Erro ao entrar: " + error.message));
+                .catch(error => mostrarBannerNotificacao("Erro ao entrar: " + error.message, "#ff4757"));
         }
 
         async function fazerCadastro() {
@@ -550,41 +583,35 @@
             const referencia = document.getElementById('reg-referencia').value;
 
             if (!nome || !endereco || !bairro || !cidade) {
-                alert("Por favor, preencha o nome, endereço, bairro e cidade.");
+                mostrarBannerNotificacao("Preencha nome, endereço, bairro e cidade.", "#ff4757");
                 return;
             }
 
             try {
                 const cred = await auth.createUserWithEmailAndPassword(email, senha);
-                // Salva os dados do perfil no Firestore vinculados ao UID do usuário
                 await db.collection('usuarios').doc(cred.user.uid).set({
-                    nome,
-                    email,
-                    endereco,
-                    bairro,
-                    cidade,
-                    referencia,
+                    nome, email, endereco, bairro, cidade, referencia,
                     atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                alert("Conta criada com sucesso!");
+                mostrarBannerNotificacao("Conta criada com sucesso!");
             } catch (error) {
-                alert("Erro ao cadastrar: " + error.message);
+                mostrarBannerNotificacao("Erro ao cadastrar: " + error.message, "#ff4757");
             }
         }
 
         function fazerLogout() {
-            auth.signOut().then(() => alert("Você saiu da sua conta."));
+            auth.signOut().then(() => mostrarBannerNotificacao("Você saiu da conta."));
         }
 
         function esqueciSenha() {
             const email = document.getElementById('auth-email').value;
             if (!email) {
-                alert("Digite seu e-mail no campo acima.");
+                mostrarBannerNotificacao("Digite seu e-mail no campo acima.", "#ff4757");
                 return;
             }
             auth.sendPasswordResetEmail(email)
-                .then(() => alert("E-mail de recuperação enviado!"))
-                .catch(error => alert("Erro: " + error.message));
+                .then(() => mostrarBannerNotificacao("E-mail de recuperação enviado!"))
+                .catch(error => mostrarBannerNotificacao("Erro: " + error.message, "#ff4757"));
         }
 
         async function carregarPerfilCliente() {
@@ -600,7 +627,7 @@
                     document.getElementById('perfil-referencia').value = dados.referencia || '';
                 }
             } catch (error) {
-                console.log("Erro ao carregar perfil:", error);
+                console.log("Erro perfil:", error);
             }
         }
 
@@ -613,23 +640,18 @@
             const referencia = document.getElementById('perfil-referencia').value;
 
             if (!nome || !endereco || !bairro || !cidade) {
-                alert("Preencha os campos obrigatórios do perfil.");
+                mostrarBannerNotificacao("Preencha os campos obrigatórios.", "#ff4757");
                 return;
             }
 
             try {
                 await db.collection('usuarios').doc(usuarioAtual.uid).set({
-                    nome,
-                    email: usuarioAtual.email,
-                    endereco,
-                    bairro,
-                    cidade,
-                    referencia,
+                    nome, email: usuarioAtual.email, endereco, bairro, cidade, referencia,
                     atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
-                alert("Perfil e endereço atualizados com sucesso!");
+                mostrarBannerNotificacao("Perfil atualizado com sucesso!");
             } catch (error) {
-                alert("Erro ao atualizar: " + error.message);
+                mostrarBannerNotificacao("Erro ao atualizar: " + error.message, "#ff4757");
             }
         }
 
@@ -643,15 +665,51 @@
             if (aba === 'vitrine' || aba === 'pedidos-cliente' || aba === 'carrinho') {
                 document.getElementById('btn-subnav-' + (aba === 'pedidos-cliente' ? 'pedidos' : aba)).classList.add('active');
             } else {
-                document.getElementById('nav-btn-' + aba).classList.add('active');
+                let btn = document.getElementById('nav-btn-' + aba);
+                if(btn) btn.classList.add('active');
             }
         }
 
-        function mudarAbaAdmin(aba) {
-            document.querySelectorAll('.admin-tab').forEach(el => el.style.display = 'none');
-            document.querySelectorAll('#nav-admin button').forEach(el => el.classList.remove('active'));
-            document.getElementById('admin-tab-' + aba).style.display = 'block';
-            event.currentTarget.classList.add('active');
+        // Navegação Superior do Admin
+        function mudarAbaAdminSuperior(aba) {
+            document.getElementById('admin-tab-vitrine').style.display = 'none';
+            document.getElementById('admin-tab-pedidos').style.display = 'none';
+            document.getElementById('admin-tab-avaliacoes').style.display = 'none';
+            document.getElementById('admin-tab-mensagens').style.display = 'none';
+
+            document.getElementById('btn-admin-sub-vitrine').classList.remove('active');
+            document.getElementById('btn-admin-sub-pedidos').classList.remove('active');
+            document.getElementById('nav-btn-admin-avaliacoes').classList.remove('active');
+            document.getElementById('nav-btn-admin-mensagens').classList.remove('active');
+
+            if (aba === 'vitrine') {
+                document.getElementById('admin-tab-vitrine').style.display = 'block';
+                document.getElementById('btn-admin-sub-vitrine').classList.add('active');
+            } else if (aba === 'pedidos') {
+                document.getElementById('admin-tab-pedidos').style.display = 'block';
+                document.getElementById('btn-admin-sub-pedidos').classList.add('active');
+            }
+        }
+
+        // Navegação Inferior do Admin
+        function mudarAbaAdminInferior(aba) {
+            document.getElementById('admin-tab-vitrine').style.display = 'none';
+            document.getElementById('admin-tab-pedidos').style.display = 'none';
+            document.getElementById('admin-tab-avaliacoes').style.display = 'none';
+            document.getElementById('admin-tab-mensagens').style.display = 'none';
+
+            document.getElementById('btn-admin-sub-vitrine').classList.remove('active');
+            document.getElementById('btn-admin-sub-pedidos').classList.remove('active');
+            document.getElementById('nav-btn-admin-avaliacoes').classList.remove('active');
+            document.getElementById('nav-btn-admin-mensagens').classList.remove('active');
+
+            if (aba === 'avaliacoes') {
+                document.getElementById('admin-tab-avaliacoes').style.display = 'block';
+                document.getElementById('nav-btn-admin-avaliacoes').classList.add('active');
+            } else if (aba === 'mensagens') {
+                document.getElementById('admin-tab-mensagens').style.display = 'block';
+                document.getElementById('nav-btn-admin-mensagens').classList.add('active');
+            }
         }
 
         function ouvirNotificacoesNovosPratos() {
@@ -669,13 +727,6 @@
             });
         }
 
-        function mostrarBannerNotificacao(texto) {
-            const banner = document.getElementById('notification-banner');
-            banner.innerText = texto;
-            banner.style.display = 'block';
-            setTimeout(() => { banner.style.display = 'none'; }, 5000);
-        }
-
         async function cadastrarProduto() {
             const nome = document.getElementById('adm-nome-produto').value;
             const preco = parseFloat(document.getElementById('adm-preco-produto').value);
@@ -683,7 +734,7 @@
             const status = document.getElementById('adm-status-produto').value;
 
             if (!nome || isNaN(preco) || !fotoUrl) {
-                alert("Preencha todos os campos corretamente.");
+                mostrarBannerNotificacao("Preencha todos os campos do produto.", "#ff4757");
                 return;
             }
 
@@ -692,12 +743,12 @@
                     nome, preco, fotoUrl, status,
                     criadoEm: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                alert("Produto cadastrado com sucesso!");
+                mostrarBannerNotificacao("Produto cadastrado com sucesso!");
                 document.getElementById('adm-nome-produto').value = '';
                 document.getElementById('adm-preco-produto').value = '';
                 document.getElementById('adm-foto-produto').value = '';
             } catch (error) {
-                alert("Erro: " + error.message);
+                mostrarBannerNotificacao("Erro: " + error.message, "#ff4757");
             }
         }
 
@@ -705,7 +756,7 @@
             try {
                 await db.collection('produtos').doc(id).update({ status: novoStatus });
             } catch (error) {
-                alert("Erro ao alterar status: " + error.message);
+                mostrarBannerNotificacao("Erro ao alterar status", "#ff4757");
             }
         }
 
@@ -829,11 +880,10 @@
 
         async function finalizarPedido() {
             if (carrinho.length === 0) {
-                alert("Carrinho vazio!");
+                mostrarBannerNotificacao("O carrinho está vazio!", "#ff4757");
                 return;
             }
             
-            // Busca o endereço mais atualizado do perfil do cliente antes de enviar o pedido
             let dadosCliente = { clienteEmail: usuarioAtual.email, nome: "Cliente", endereco: "Não informado", bairro: "", cidade: "", referencia: "" };
             try {
                 const userDoc = await db.collection('usuarios').doc(usuarioAtual.uid).get();
@@ -841,7 +891,7 @@
                     dadosCliente = { ...dadosCliente, ...userDoc.data() };
                 }
             } catch (e) {
-                console.log("Erro ao buscar perfil para o pedido");
+                console.log("Erro ao buscar perfil");
             }
 
             const pagamento = document.getElementById('forma-pagamento').value;
@@ -857,13 +907,13 @@
                     tempoMinutos: 0,
                     data: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                alert("Pedido realizado com sucesso!");
+                mostrarBannerNotificacao("Pedido realizado com sucesso!");
                 carrinho = [];
                 atualizarVisualCarrinho();
                 carregarProdutosCliente(); 
                 mudarAbaCliente('pedidos-cliente');
             } catch (error) {
-                alert("Erro ao enviar pedido: " + error.message);
+                mostrarBannerNotificacao("Erro ao enviar pedido: " + error.message, "#ff4757");
             }
         }
 
@@ -913,9 +963,9 @@
                     status: novoStatus,
                     tempoMinutos: tempoMinutos
                 });
-                alert("Status atualizado para: " + novoStatus);
+                mostrarBannerNotificacao("Status alterado para: " + novoStatus);
             } catch (error) {
-                alert("Erro: " + error.message);
+                mostrarBannerNotificacao("Erro ao atualizar status", "#ff4757");
             }
         }
 
@@ -926,13 +976,31 @@
             db.collection('pedidos').orderBy('data', 'desc').onSnapshot(snapshot => {
                 container.innerHTML = '';
                 let meusPedidos = [];
+                let temConcluidoNaoAvaliado = false;
 
                 snapshot.forEach(doc => {
                     let pedido = doc.data();
                     if (pedido.clienteEmail === usuarioAtual.email) {
                         meusPedidos.push({ id: doc.id, ...pedido });
+                        // Verifica se tem pedido concluído que ainda não foi avaliado
+                        if (pedido.status === 'Concluído' && !pedido.avaliado) {
+                            temConcluidoNaoAvaliado = true;
+                            pedidoConcluidoNaoAvaliadoId = doc.id;
+                        }
                     }
                 });
+
+                // Mostra ou esconde a aba de avaliação do menu inferior do cliente
+                const btnNavAvaliar = document.getElementById('nav-btn-perfil-avaliacao');
+                if (temConcluidoNaoAvaliado) {
+                    btnNavAvaliar.style.display = 'flex';
+                } else {
+                    btnNavAvaliar.style.display = 'none';
+                    // Se a aba atual for a de avaliação e sumiu, volta para a vitrine
+                    if (document.getElementById('tab-perfil-avaliacao').style.display === 'block') {
+                        mudarAbaCliente('vitrine');
+                    }
+                }
 
                 if (meusPedidos.length === 0) {
                     container.innerHTML = `<div class="card"><p style="text-align:center;">Você ainda não fez nenhum pedido.</p></div>`;
@@ -1000,7 +1068,39 @@
         }
 
         async function enviarAvaliacao() {
-            // Caso queira manter alguma lógica complementar
+            if (!pedidoConcluidoNaoAvaliadoId) {
+                mostrarBannerNotificacao("Nenhum pedido pendente de avaliação.", "#ff4757");
+                return;
+            }
+
+            const nota = document.getElementById('nota-avaliacao').value;
+            const comentario = document.getElementById('comentario-avaliacao').value;
+            
+            try {
+                // Salva a avaliação
+                await db.collection('avaliacoes').add({
+                    email: usuarioAtual.email,
+                    nota,
+                    comentario,
+                    data: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Marca o pedido como avaliado para sumir a aba
+                await db.collection('pedidos').doc(pedidoConcluidoNaoAvaliadoId).update({
+                    avaliado: true
+                });
+
+                mostrarBannerNotificacao("Obrigado pela sua avaliação!");
+                document.getElementById('comentario-avaliacao').value = '';
+                pedidoConcluidoNaoAvaliadoId = null;
+                
+                // Esconde a aba e volta para a vitrine
+                document.getElementById('nav-btn-perfil-avaliacao').style.display = 'none';
+                mudarAbaCliente('vitrine');
+
+            } catch (error) {
+                mostrarBannerNotificacao("Erro ao enviar avaliação: " + error.message, "#ff4757");
+            }
         }
 
         function carregarAvaliacoesAdmin() {
@@ -1029,7 +1129,7 @@
             const titulo = document.getElementById('adm-titulo-promo').value;
             const texto = document.getElementById('adm-texto-promo').value;
             if (!titulo || !texto) {
-                alert("Preencha todos os campos.");
+                mostrarBannerNotificacao("Preencha todos os campos da promoção.", "#ff4757");
                 return;
             }
             try {
@@ -1037,11 +1137,11 @@
                     titulo, texto,
                     data: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                alert("Promoção enviada com sucesso!");
+                mostrarBannerNotificacao("Promoção enviada com sucesso!");
                 document.getElementById('adm-titulo-promo').value = '';
                 document.getElementById('adm-texto-promo').value = '';
             } catch (error) {
-                alert("Erro: " + error.message);
+                mostrarBannerNotificacao("Erro: " + error.message, "#ff4757");
             }
         }
 
