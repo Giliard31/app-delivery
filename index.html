@@ -529,13 +529,12 @@
         let pedidoConcluidoNaoAvaliadoId = null;
         let pingInterval = null;
 
-        // Função para o celular falar textos em voz alta
         function falarMensagem(texto) {
             if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel(); // Para qualquer fala anterior para não embolar
+                window.speechSynthesis.cancel();
                 let msg = new SpeechSynthesisUtterance(texto);
                 msg.lang = 'pt-BR';
-                msg.rate = 1.0; // Velocidade normal
+                msg.rate = 1.0;
                 window.speechSynthesis.speak(msg);
             }
         }
@@ -560,7 +559,7 @@
                     carregarPedidosAdmin();
                     carregarCaixaAdmin();
                     monitorarPessoasOnlineAdmin();
-                    ouvirPedidosNovosAdmin(); // Monitora novos pedidos para falar "Pedido"
+                    ouvirPedidosNovosAdmin();
                 } else {
                     document.getElementById('view-admin').classList.remove('active');
                     document.getElementById('view-cliente').classList.add('active');
@@ -586,7 +585,6 @@
             }
         });
 
-        // ================= SISTEMA DE PRESENÇA ONLINE =================
         function iniciarPresencaOnline() {
             if (!usuarioAtual) return;
             const userRef = db.collection('presenca').doc(usuarioAtual.uid);
@@ -850,7 +848,6 @@
             });
         }
 
-        // Função específica para o Admin ouvir novos pedidos em tempo real
         function ouvirPedidosNovosAdmin() {
             let primeiraVez = true;
             db.collection('pedidos').orderBy('data', 'desc').limit(1).onSnapshot(snapshot => {
@@ -1064,6 +1061,7 @@
                     valorTotal: valorTotalPedido,
                     status: "Aguardando Preparo",
                     tempoMinutos: 0,
+                    visivelParaCliente: true, // <-- Mantém visível para o cliente inicialmente
                     data: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 mostrarBannerNotificacao("Pedido realizado com sucesso!");
@@ -1163,11 +1161,14 @@
             }
         }
 
+        // AGORA O CLIENTE APENAS OCULTA O PEDIDO DO HISTÓRICO DELE, SEM APAGAR DO CAIXA DO ADMIN!
         async function excluirMeuPedido(id) {
             if (!confirm("Deseja realmente apagar este pedido do seu histórico?")) return;
             try {
-                await db.collection('pedidos').doc(id).delete();
-                mostrarBannerNotificacao("Pedido removido do histórico.");
+                await db.collection('pedidos').doc(id).update({
+                    visivelParaCliente: false
+                });
+                mostrarBannerNotificacao("Pedido removido do seu histórico.");
             } catch (error) {
                 mostrarBannerNotificacao("Erro ao apagar pedido", "#ff4757");
             }
@@ -1235,7 +1236,8 @@
 
                 snapshot.forEach(doc => {
                     let pedido = doc.data();
-                    if (pedido.clienteEmail === usuarioAtual.email) {
+                    // Só mostra se for do cliente E se a visibilidade estiver ativa (true ou indefinida para antigos)
+                    if (pedido.clienteEmail === usuarioAtual.email && pedido.visivelParaCliente !== false) {
                         meusPedidos.push({ id: doc.id, ...pedido });
                         if (pedido.status === 'Concluído' && !pedido.avaliado) {
                             temConcluidoNaoAvaliado = true;
