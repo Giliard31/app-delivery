@@ -139,7 +139,6 @@
             font-size: 1rem;
         }
 
-        /* Botões maiores e mais fáceis de clicar */
         button.btn-primary {
             background: var(--primary);
             color: var(--white);
@@ -250,8 +249,8 @@
                     <h3>Cadastrar Produto</h3>
                     <input type="text" id="adm-nome-produto" placeholder="Nome do Produto">
                     <input type="number" id="adm-preco-produto" placeholder="Preço (Ex: 25.00)" step="0.01">
-                    <label style="font-weight: bold; margin-top: 10px; display: block;">Foto do Produto:</label>
-                    <input type="file" id="adm-foto-produto" accept="image/*">
+                    <input type="url" id="adm-foto-produto" placeholder="Link da Foto (Ex: https://...)" required>
+                    <small style="color: #747d8c; display: block; margin-top: -5px; margin-bottom: 10px;">Dica: Cole o link direto de uma imagem da internet.</small>
                     <button class="btn-primary" onclick="cadastrarProduto()">Salvar Produto na Vitrine</button>
                 </div>
             </div>
@@ -305,7 +304,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
     <script>
         // Configuração do Firebase
@@ -319,11 +317,10 @@
             measurementId: "G-1SVFNTGSXM"
         };
 
-        // Inicializa Firebase
+        // Inicializa Firebase (Apenas Auth e Firestore - 100% Gratuito)
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
-        const storage = firebase.storage();
 
         // ⚠️ COLOQUE AQUI O SEU E-MAIL EXATO DE ADMINISTRADOR:
         const ADMIN_EMAIL = "giliardmartins31@gmail.com"; 
@@ -415,22 +412,18 @@
             event.currentTarget.classList.add('active');
         }
 
-        // --- CADASTRO E VITRINE (ADMIN) ---
+        // --- CADASTRO E VITRINE (ADMIN) USANDO URL ---
         async function cadastrarProduto() {
             const nome = document.getElementById('adm-nome-produto').value;
             const preco = parseFloat(document.getElementById('adm-preco-produto').value);
-            const arquivo = document.getElementById('adm-foto-produto').files[0];
+            const fotoUrl = document.getElementById('adm-foto-produto').value;
 
-            if (!nome || isNaN(preco) || !arquivo) {
-                alert("Preencha todos os campos corretamente e selecione uma foto.");
+            if (!nome || isNaN(preco) || !fotoUrl) {
+                alert("Preencha todos os campos corretamente, incluindo o link da foto.");
                 return;
             }
 
             try {
-                const storageRef = storage.ref(`produtos/${Date.now()}_${arquivo.name}`);
-                const snapshot = await storageRef.put(arquivo);
-                const fotoUrl = await snapshot.ref.getDownloadURL();
-
                 await db.collection('produtos').add({
                     nome,
                     preco,
