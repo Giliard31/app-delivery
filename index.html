@@ -76,7 +76,7 @@
             display: block;
         }
 
-        /* Menu Superior do Cliente (Cardápio, Meus Pedidos, Carrinho) */
+        /* Menu Superior do Cliente (Cardápio, Meus Pedidos, Carrinho com contador) */
         .top-subnav {
             display: flex;
             justify-content: space-between;
@@ -99,6 +99,7 @@
             color: #57606f;
             cursor: pointer;
             transition: all 0.2s;
+            position: relative;
         }
 
         .top-subnav button.active {
@@ -165,6 +166,35 @@
             object-fit: cover;
             border-radius: 8px;
             margin-bottom: 10px;
+        }
+
+        /* Seletor de quantidade no cardápio (+ / -) */
+        .seletor-qtd {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .seletor-qtd button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .seletor-qtd span {
+            font-size: 1.1rem;
+            font-weight: bold;
+            min-width: 24px;
+            text-align: center;
         }
 
         input, select, textarea {
@@ -259,11 +289,11 @@
         <!-- ================= VISÃO DO CLIENTE ================= -->
         <div id="view-cliente" class="view-section">
             
-            <!-- Menu Superior do Cliente (Cardápio, Meus Pedidos, Carrinho) -->
+            <!-- Menu Superior do Cliente (Cardápio, Meus Pedidos, Carrinho com contador) -->
             <div class="top-subnav">
                 <button id="btn-subnav-vitrine" class="active" onclick="mudarAbaCliente('vitrine')">🏠 Cardápio</button>
                 <button id="btn-subnav-pedidos" onclick="mudarAbaCliente('pedidos-cliente')">📦 Meus Pedidos</button>
-                <button id="btn-subnav-carrinho" onclick="mudarAbaCliente('carrinho')">🛒 Carrinho</button>
+                <button id="btn-subnav-carrinho" onclick="mudarAbaCliente('carrinho')">🛒 Carrinho <span id="contador-carrinho-topo" style="background:#ff4757; color:white; padding:2px 6px; border-radius:10px; font-size:0.75rem; display:none;">0</span></button>
             </div>
 
             <!-- Aba Vitrine / Cardápio -->
@@ -588,12 +618,23 @@
                 snapshot.forEach(doc => {
                     const p = doc.data();
                     const indisponivel = p.status === 'indisponivel';
+                    
+                    // Verifica quantos itens já estão selecionados no carrinho deste produto
+                    let itemNoCarrinho = carrinho.find(i => i.name === p.nome);
+                    let quantidadeAtual = itemNoCarrinho ? itemNoCarrinho.quantidade : 0;
+
                     container.innerHTML += `
                         <div class="produto-card ${indisponivel ? 'indisponivel' : ''}">
                             <img src="${p.fotoUrl}" alt="${p.nome}">
                             <h3>${p.nome}</h3>
                             <p style="color: #2ed573; font-weight: bold; margin: 8px 0; font-size: 1.1rem;">R$ ${p.preco.toFixed(2)}</p>
-                            ${indisponivel ? '<p style="color:red; font-weight:bold;">Indisponível no momento</p>' : `<button class="btn-primary" onclick="adicionarCarrinho('${p.nome}', ${p.preco})">Pedir</button>`}
+                            ${indisponivel ? '<p style="color:red; font-weight:bold;">Indisponível no momento</p>' : `
+                                <div class="seletor-qtd">
+                                    <button onclick="alterarQtdProduto('${p.nome}', ${p.preco}, -1)">-</button>
+                                    <span id="qtd-${p.nome.replace(/\s+/g, '-')}">${quantidadeAtual}</span>
+                                    <button onclick="alterarQtdProduto('${p.nome}', ${p.preco}, 1)">+</button>
+                                </div>
+                            `}
                         </div>
                     `;
                 });
@@ -627,19 +668,40 @@
         }
 
         // --- CARRINHO E PEDIDOS ---
-        function adicionarCarrinho(nome, preco) {
-            const item = carrinho.find(i => i.name === nome);
+        function alterarQtdProduto(nome, preco, delta) {
+            let item = carrinho.find(i => i.name === nome);
             if (item) {
-                item.quantidade++;
-            } else {
-                carrinho.push({ name: nome, price: preco, quantidade: 1 });
+                item.quantidade += delta;
+                if (item.quantidade <= 0) {
+                    carrinho = carrinho.filter(i => i.name !== nome);
+                    item = { quantidade: 0 };
+                }
+            } else if (delta > 0) {
+                item = { name: nome, price: preco, quantidade: 1 };
+                carrinho.push(item);
             }
+
+            // Atualiza o numerozinho direto no cardápio sem recriar tudo
+            let spanQtd = document.getElementById('qtd-' + nome.replace(/\s+/g, '-'));
+            if (spanQtd) {
+                spanQtd.innerText = item ? item.quantidade : 0;
+            }
+
             atualizarVisualCarrinho();
-            alert(nome + " adicionado ao carrinho!");
         }
 
         function atualizarVisualCarrinho() {
             const container = document.getElementById('itens-carrinho');
+            const contadorTopo = document.getElementById('contador-carrinho-topo');
+            
+            let totalItens = carrinho.reduce((sum, i) => sum + i.quantidade, 0);
+            if (totalItens > 0) {
+                contadorTopo.innerText = totalItens;
+                contadorTopo.style.display = 'inline-block';
+            } else {
+                contadorTopo.style.display = 'none';
+            }
+
             if (carrinho.length === 0) {
                 container.innerHTML = `<p>Seu carrinho está vazio.</p>`;
                 return;
@@ -652,7 +714,7 @@
                 html += `
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 8px;">
                         <div><strong>${item.name}</strong><br><small>R$ ${item.price.toFixed(2)} x ${item.quantidade}</small></div>
-                        <div><span>R$ ${subtotal.toFixed(2)}</span> <button onclick="removerCarrinho(${index})" style="background:red; color:white; border:none; padding:5px 10px; border-radius:5px; margin-left: 8px; cursor:pointer;">X</button></div>
+                        <div><span>R$ ${subtotal.toFixed(2)}</span> <button onclick="removerCarrinhoTotal(${index})" style="background:red; color:white; border:none; padding:5px 10px; border-radius:5px; margin-left: 8px; cursor:pointer;">X</button></div>
                     </div>
                 `;
             });
@@ -660,8 +722,16 @@
             container.innerHTML = html;
         }
 
-        function removerCarrinho(index) {
+        function removerCarrinhoTotal(index) {
+            let itemRemovido = carrinho[index];
             carrinho.splice(index, 1);
+            
+            // Atualiza o contador na vitrine caso esteja visível
+            if (itemRemovido) {
+                let spanQtd = document.getElementById('qtd-' + itemRemovido.name.replace(/\s+/g, '-'));
+                if (spanQtd) spanQtd.innerText = 0;
+            }
+
             atualizarVisualCarrinho();
         }
 
@@ -683,8 +753,9 @@
                 alert("Pedido realizado com sucesso!");
                 carrinho = [];
                 atualizarVisualCarrinho();
+                carregarProdutosCliente(); // Reseta os contadores na vitrine
                 
-                // Manda o cliente direto para a aba "Meus Pedidos" para ver a tela animada/status em tempo real
+                // Manda o cliente direto para a aba "Meus Pedidos" para acompanhar em tempo real
                 mudarAbaCliente('pedidos-cliente');
             } catch (error) {
                 alert("Erro ao enviar pedido: " + error.message);
@@ -740,10 +811,22 @@
         }
 
         function carregarPedidosCliente() {
+            if (!usuarioAtual) return;
             const container = document.getElementById('lista-pedidos-cliente');
-            db.collection('pedidos').where('clienteEmail', '==', usuarioAtual.email).orderBy('data', 'desc').onSnapshot(snapshot => {
+            
+            // CORREÇÃO DA BUSCA: Carrega todos os pedidos e filtra no código para evitar falhas de índice composto do Firestore
+            db.collection('pedidos').orderBy('data', 'desc').onSnapshot(snapshot => {
                 container.innerHTML = '';
-                if (snapshot.empty) {
+                let meusPedidos = [];
+
+                snapshot.forEach(doc => {
+                    let pedido = doc.data();
+                    if (pedido.clienteEmail === usuarioAtual.email) {
+                        meusPedidos.push({ id: doc.id, ...pedido });
+                    }
+                });
+
+                if (meusPedidos.length === 0) {
                     container.innerHTML = `<div class="card"><p style="text-align:center;">Você ainda não fez nenhum pedido.</p></div>`;
                     return;
                 }
@@ -751,9 +834,8 @@
                 Object.values(timerIntervalos).forEach(clearInterval);
                 timerIntervalos = {};
 
-                snapshot.forEach(doc => {
-                    const pedido = doc.data();
-                    const id = doc.id;
+                meusPedidos.forEach(pedido => {
+                    const id = pedido.id;
                     let itensHtml = pedido.itens ? pedido.itens.map(i => `${i.name} (x${i.quantidade})`).join(', ') : '';
                     let statusHtml = '';
 
@@ -887,7 +969,7 @@
         function carregarPromocoes() {
             const container = document.getElementById('lista-promocoes-cliente');
             db.collection('promocoes').onSnapshot(snapshot => {
-                container.innerHTML = '';
+                container.innerHTML =`;
                 if (snapshot.empty) {
                     container.innerHTML = `<div class="card"><p>Nenhum cupom ativo no momento.</p></div>`;
                     return;
