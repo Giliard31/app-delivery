@@ -41,9 +41,9 @@
         header {
             background-color: var(--primary);
             color: var(--white);
-            padding: 18px;
+            padding: 15px 18px;
             text-align: center;
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             font-weight: bold;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             display: flex;
@@ -55,9 +55,9 @@
             background: rgba(255, 255, 255, 0.2);
             border: none;
             color: var(--white);
-            padding: 8px 12px;
+            padding: 6px 10px;
             border-radius: 6px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             cursor: pointer;
         }
 
@@ -94,7 +94,7 @@
             border: none;
             padding: 10px;
             border-radius: 6px;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: bold;
             color: #57606f;
             cursor: pointer;
@@ -264,7 +264,10 @@
 
     <header>
         <span id="app-title">🍔 Meu Delivery</span>
-        <button id="btn-sair" class="btn-sair" style="display:none;" onclick="fazerLogout()">Sair</button>
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <button id="btn-ativar-push" onclick="solicitarPermissaoNotificacao()" style="background: rgba(255,255,255,0.3); border:none; color:white; padding:6px 10px; border-radius:6px; font-size:0.75rem; cursor:pointer; display:none;">🔔 Ativar Avisos Tela Apagada</button>
+            <button id="btn-sair" class="btn-sair" style="display:none;" onclick="fazerLogout()">Sair</button>
+        </div>
     </header>
 
     <main>
@@ -298,7 +301,7 @@
             
             <div class="top-subnav">
                 <button id="btn-subnav-vitrine" class="active" onclick="mudarAbaCliente('vitrine')">🏠 Cardápio</button>
-                <button id="btn-subnav-pedidos" onclick="mudarAbaCliente('pedidos-cliente')">📦 Meus Pedidos</button>
+                <button id="btn-subnav-pedidos" onclick="mudarAbaCliente('pedidos-cliente')">📦 Pedidos</button>
                 <button id="btn-subnav-carrinho" onclick="mudarAbaCliente('carrinho')">🛒 Carrinho <span id="contador-carrinho-topo" style="background:#ff4757; color:white; padding:2px 6px; border-radius:10px; font-size:0.75rem; display:none;">0</span></button>
             </div>
 
@@ -325,6 +328,17 @@
                 <div id="itens-carrinho" class="card">
                     <p>Seu carrinho está vazio.</p>
                 </div>
+
+                <!-- Seção de Cupom -->
+                <div class="card" style="background: #f1f2f6; border-left: 5px solid var(--primary);">
+                    <h3 style="font-size: 1rem; margin-bottom: 8px;">🎁 Possui Cupom de Desconto?</h3>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="input-codigo-cupom" placeholder="Digite seu cupom" style="margin:0; text-transform: uppercase;">
+                        <button class="btn-primary" style="margin:0; width: 120px; font-size:0.9rem;" onclick="aplicarCupomCliente()">Aplicar</button>
+                    </div>
+                    <p id="status-cupom-msg" style="margin-top: 8px; font-size: 0.9rem; font-weight: bold; color: #2ed573; display: none;"></p>
+                </div>
+
                 <h3>Forma de Pagamento</h3>
                 <select id="forma-pagamento" onchange="verificarTroco(this.value)">
                     <option value="pix">Pix (Manual)</option>
@@ -350,11 +364,9 @@
 
             <!-- Aba Cupons e Promoções -->
             <div id="tab-promocoes" class="cliente-tab" style="display:none;">
-                <h2>Cupons e Promoções</h2>
+                <h2>Meus Cupons Disponíveis</h2>
                 <div id="lista-promocoes-cliente" style="margin-top: 15px;">
-                    <div class="card">
-                        <p>🎁 <strong>BEMVINDO10</strong> - Use este cupom para ganhar desconto!</p>
-                    </div>
+                    <p style="text-align:center;">Nenhum cupom disponível no momento.</p>
                 </div>
             </div>
 
@@ -408,7 +420,7 @@
             <!-- Menu Superior do Admin -->
             <div class="top-subnav">
                 <button id="btn-admin-sub-vitrine" class="active" onclick="mudarAbaAdminSuperior('vitrine')">🍔 Vitrine</button>
-                <button id="btn-admin-sub-pedidos" onclick="mudarAbaAdminSuperior('pedidos')">📦 Pedidos Ativos</button>
+                <button id="btn-admin-sub-pedidos" onclick="mudarAbaAdminSuperior('pedidos')">📦 Pedidos</button>
                 <button id="btn-admin-sub-caixa" onclick="mudarAbaAdminSuperior('caixa')">💰 Caixa</button>
             </div>
 
@@ -468,13 +480,21 @@
                 </div>
             </div>
 
-            <!-- Admin: Promoções -->
+            <!-- Admin: Cupons e Promoções Direcionadas -->
             <div id="admin-tab-mensagens" class="admin-tab" style="display:none;">
-                <h2>Enviar Cupom / Mensagem</h2>
+                <h2>Criar Cupom / Promoção Direcionada</h2>
                 <div class="card">
-                    <input type="text" id="adm-titulo-promo" placeholder="Título ou Código do Cupom">
-                    <textarea id="adm-texto-promo" placeholder="Mensagem para os clientes..."></textarea>
-                    <button class="btn-primary" onclick="enviarPromocao()">Transmitir Mensagem</button>
+                    <label style="font-weight: bold;">Enviar Para:</label>
+                    <select id="adm-cupom-destino" style="margin-bottom: 10px;">
+                        <option value="todos">🌐 Para Todos os Clientes</option>
+                        <!-- Os e-mails dos clientes serão injetados aqui -->
+                    </select>
+
+                    <input type="text" id="adm-titulo-promo" placeholder="Código do Cupom (Ex: DESCONTO10)" style="text-transform: uppercase;">
+                    <input type="number" id="adm-valor-desconto" placeholder="Valor do Desconto em Reais (Ex: 5.00)" step="0.01">
+                    <textarea id="adm-texto-promo" placeholder="Descrição / Mensagem do cupom..."></textarea>
+                    
+                    <button class="btn-primary" onclick="enviarPromocao()">Gerar e Enviar Cupom</button>
                 </div>
             </div>
 
@@ -491,7 +511,7 @@
     <!-- Menu Inferior do Administrador -->
     <nav id="nav-admin" style="display:none;">
         <button id="nav-btn-admin-avaliacoes" onclick="mudarAbaAdminInferior('avaliacoes')">⭐ Avaliações</button>
-        <button id="nav-btn-admin-mensagens" onclick="mudarAbaAdminInferior('mensagens')">📢 Promoções</button>
+        <button id="nav-btn-admin-mensagens" onclick="mudarAbaAdminInferior('mensagens')">🎁 Cupons</button>
     </nav>
 
     <!-- Scripts do Firebase -->
@@ -502,7 +522,7 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW error:', err));
+                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW error:', err));
             });
         }
 
@@ -528,6 +548,7 @@
         let modoCadastroAtivo = false;
         let pedidoConcluidoNaoAvaliadoId = null;
         let pingInterval = null;
+        let cupomAplicado = null; // Guarda o cupom ativo no carrinho
 
         function falarMensagem(texto) {
             if ('speechSynthesis' in window) {
@@ -536,7 +557,6 @@
                 msg.lang = 'pt-BR';
                 msg.rate = 1.0;
                 
-                // Tenta buscar uma voz de melhor qualidade / menos robótica do sistema
                 let vozes = window.speechSynthesis.getVoices();
                 let vozNatural = vozes.find(v => v.lang.includes('pt') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Luciana') || v.name.includes('Microsoft')));
                 if (vozNatural) {
@@ -547,9 +567,33 @@
             }
         }
 
-        // Garante o carregamento das vozes do navegador
         if ('speechSynthesis' in window) {
             window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
+        }
+
+        function solicitarPermissaoNotificacao() {
+            if ('Notification' in window) {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        mostrarBannerNotificacao("Notificações em segundo plano ativadas!");
+                        document.getElementById('btn-ativar-push').style.display = 'none';
+                    } else {
+                        mostrarBannerNotificacao("Permissão negada para notificações.", "#ff4757");
+                    }
+                });
+            }
+        }
+
+        function dispararPushNativo(titulo, corpo) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                navigator.serviceWorker.ready.then(registration => {
+                    registration.showNotification(titulo, {
+                        body: corpo,
+                        icon: 'img/icone-192.png',
+                        vibrate: [200, 100, 200]
+                    });
+                });
+            }
         }
 
         auth.onAuthStateChanged((user) => {
@@ -558,6 +602,11 @@
                 document.getElementById('view-auth').classList.remove('active');
                 document.getElementById('btn-sair').style.display = 'block';
                 
+                // Exibe o botão de ativar notificações se o navegador suportar e ainda não foi autorizado
+                if ('Notification' in window && Notification.permission !== 'granted') {
+                    document.getElementById('btn-ativar-push').style.display = 'block';
+                }
+
                 iniciarPresencaOnline();
 
                 if (user.email === ADMIN_EMAIL) {
@@ -571,6 +620,7 @@
                     carregarAvaliacoesAdmin();
                     carregarPedidosAdmin();
                     carregarCaixaAdmin();
+                    carregarListaEmailsAdmin();
                     monitorarPessoasOnlineAdmin();
                     ouvirPedidosNovosAdmin();
                 } else {
@@ -580,7 +630,7 @@
                     document.getElementById('nav-admin').style.display = 'none';
                     document.getElementById('app-title').innerText = '🍔 Meu Delivery';
                     carregarProdutosCliente();
-                    carregarPromocoes();
+                    carregarPromocoesCliente();
                     carregarPedidosCliente();
                     carregarPerfilCliente();
                     ouvirNotificacoesNovosPratos();
@@ -594,6 +644,7 @@
                 document.getElementById('nav-cliente').style.display = 'none';
                 document.getElementById('nav-admin').style.display = 'none';
                 document.getElementById('btn-sair').style.display = 'none';
+                document.getElementById('btn-ativar-push').style.display = 'none';
                 document.getElementById('app-title').innerText = '🍔 Meu Delivery';
             }
         });
@@ -601,7 +652,6 @@
         function iniciarPresencaOnline() {
             if (!usuarioAtual) return;
             const userRef = db.collection('presenca').doc(usuarioAtual.uid);
-            
             async function atualizarPing() {
                 try {
                     await userRef.set({
@@ -610,7 +660,6 @@
                     });
                 } catch(e) {}
             }
-
             atualizarPing();
             pingInterval = setInterval(atualizarPing, 15000);
         }
@@ -626,7 +675,6 @@
             db.collection('presenca').onSnapshot(snapshot => {
                 let agora = new Date().getTime();
                 let contadorAtivos = 0;
-                
                 snapshot.forEach(doc => {
                     let dados = doc.data();
                     if (dados.ultimaVez) {
@@ -636,7 +684,6 @@
                         }
                     }
                 });
-
                 document.getElementById('contador-online').innerText = contadorAtivos > 0 ? contadorAtivos : 1;
             });
         }
@@ -735,9 +782,7 @@
                     document.getElementById('perfil-cidade').value = dados.cidade || '';
                     document.getElementById('perfil-referencia').value = dados.referencia || '';
                 }
-            } catch (error) {
-                console.log("Erro perfil:", error);
-            }
+            } catch (error) {}
         }
 
         async function salvarPerfilCliente() {
@@ -856,6 +901,7 @@
                 snapshot.docChanges().forEach(change => {
                     if (change.type === 'added') {
                         mostrarBannerNotificacao("🔔 Novo prato adicionado ao cardápio!");
+                        dispararPushNativo("Cardápio Atualizado", "Novo prato adicionado!");
                     }
                 });
             });
@@ -871,9 +917,25 @@
                 snapshot.docChanges().forEach(change => {
                     if (change.type === 'added') {
                         falarMensagem("Novo pedido recebido!");
+                        dispararPushNativo("Novo Pedido!", "Um cliente acabou de fazer um pedido.");
                     }
                 });
             });
+        }
+
+        async function carregarListaEmailsAdmin() {
+            const selectDestino = document.getElementById('adm-cupom-destino');
+            try {
+                const snapshot = await db.collection('usuarios').get();
+                let options = `<option value="todos">🌐 Para Todos os Clientes</option>`;
+                snapshot.forEach(doc => {
+                    let u = doc.data();
+                    if (u.email && u.email !== ADMIN_EMAIL) {
+                        options += `<option value="${u.email}">👤 ${u.nome || u.email} (${u.email})</option>`;
+                    }
+                });
+                selectDestino.innerHTML = options;
+            } catch (e) {}
         }
 
         async function cadastrarProduto() {
@@ -999,13 +1061,17 @@
 
             if (carrinho.length === 0) {
                 container.innerHTML = `<p>Seu carrinho está vazio.</p>`;
+                cupomAplicado = null;
+                document.getElementById('status-cupom-msg').style.display = 'none';
+                document.getElementById('input-codigo-cupom').value = '';
                 return;
             }
+
             let html = '';
-            let total = 0;
+            let subtotalGeral = 0;
             carrinho.forEach((item, index) => {
                 let subtotal = item.price * item.quantidade;
-                total += subtotal;
+                subtotalGeral += subtotal;
                 html += `
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 8px;">
                         <div><strong>${item.name}</strong><br><small>R$ ${item.price.toFixed(2)} x ${item.quantidade}</small></div>
@@ -1013,7 +1079,16 @@
                     </div>
                 `;
             });
-            html += `<div style="margin-top: 15px; text-align:right; font-size: 1.1rem;"><strong>Total: R$ ${total.toFixed(2)}</strong></div>`;
+
+            let desconto = cupomAplicado ? cupomAplicado.desconto : 0;
+            let totalFinal = Math.max(0, subtotalGeral - desconto);
+
+            html += `<div style="text-align:right; font-size: 0.95rem; color:#666;">Subtotal: R$ ${subtotalGeral.toFixed(2)}</div>`;
+            if (cupomAplicado) {
+                html += `<div style="text-align:right; font-size: 0.95rem; color:var(--success);">Desconto Cupom (${cupomAplicado.codigo}): - R$ ${desconto.toFixed(2)}</div>`;
+            }
+            html += `<div style="margin-top: 5px; text-align:right; font-size: 1.2rem;"><strong>Total: R$ ${totalFinal.toFixed(2)}</strong></div>`;
+            
             container.innerHTML = html;
         }
 
@@ -1025,6 +1100,60 @@
                 if (spanQtd) spanQtd.innerText = 0;
             }
             atualizarVisualCarrinho();
+        }
+
+        async function aplicarCupomCliente() {
+            let codigo = document.getElementById('input-codigo-cupom').value.trim().toUpperCase();
+            const msgEl = document.getElementById('status-cupom-msg');
+
+            if (!codigo) {
+                mostrarBannerNotificacao("Digite o código do cupom.", "#ff4757");
+                return;
+            }
+
+            try {
+                const snapshot = await db.collection('promocoes').where('titulo', '==', codigo).get();
+                if (snapshot.empty) {
+                    msgEl.style.display = 'block';
+                    msgEl.style.color = '#ff4757';
+                    msgEl.innerText = "Cupom inválido ou expirado.";
+                    cupomAplicado = null;
+                    atualizarVisualCarrinho();
+                    return;
+                }
+
+                let cupomValido = null;
+                snapshot.forEach(doc => {
+                    let d = doc.data();
+                    // Verifica se é para todos ou direcionado para o e-mail deste usuário
+                    if (d.destino === 'todos' || d.destino === usuarioAtual.email) {
+                        cupomValido = d;
+                    }
+                });
+
+                if (!cupomValido) {
+                    msgEl.style.display = 'block';
+                    msgEl.style.color = '#ff4757';
+                    msgEl.innerText = "Este cupom não é válido para a sua conta.";
+                    cupomAplicado = null;
+                    atualizarVisualCarrinho();
+                    return;
+                }
+
+                cupomAplicado = {
+                    codigo: cupomValido.titulo,
+                    desconto: parseFloat(cupomValido.valorDesconto) || 0
+                };
+
+                msgEl.style.display = 'block';
+                msgEl.style.color = '#2ed573';
+                msgEl.innerText = `Cupom aplicado! Desconto de R$ ${cupomAplicado.desconto.toFixed(2)}`;
+                atualizarVisualCarrinho();
+                mostrarBannerNotificacao("Cupom aplicado com sucesso!");
+
+            } catch (e) {
+                mostrarBannerNotificacao("Erro ao validar cupom", "#ff4757");
+            }
         }
 
         async function finalizarPedido() {
@@ -1039,9 +1168,7 @@
                 if (userDoc.exists) {
                     dadosCliente = { ...dadosCliente, ...userDoc.data() };
                 }
-            } catch (e) {
-                console.log("Erro ao buscar perfil");
-            }
+            } catch (e) {}
 
             const pagamento = document.getElementById('forma-pagamento').value;
             let infoTroco = "Não aplicável";
@@ -1060,7 +1187,9 @@
                 }
             }
 
-            let valorTotalPedido = carrinho.reduce((sum, i) => sum + (i.price * i.quantidade), 0);
+            let subtotalPedido = carrinho.reduce((sum, i) => sum + (i.price * i.quantidade), 0);
+            let descontoAplicado = cupomAplicado ? cupomAplicado.desconto : 0;
+            let valorTotalPedido = Math.max(0, subtotalPedido - descontoAplicado);
 
             try {
                 await db.collection('pedidos').add({
@@ -1072,6 +1201,7 @@
                     pagamento: pagamento.toUpperCase(),
                     detalheTroco: infoTroco,
                     valorTotal: valorTotalPedido,
+                    cupomUsado: cupomAplicado ? cupomAplicado.codigo : null,
                     status: "Aguardando Preparo",
                     tempoMinutos: 0,
                     visivelParaCliente: true,
@@ -1079,6 +1209,7 @@
                 });
                 mostrarBannerNotificacao("Pedido realizado com sucesso!");
                 carrinho = [];
+                cupomAplicado = null;
                 atualizarVisualCarrinho();
                 carregarProdutosCliente(); 
                 mudarAbaCliente('pedidos-cliente');
@@ -1107,6 +1238,7 @@
                                     🗺️ <strong>Referência:</strong> ${p.referencia || 'Nenhuma'}
                                 </p>
                                 <p><strong>Itens:</strong> ${itensHtml}</p>
+                                ${p.cupomUsado ? `<p><strong>Cupom:</strong> ${p.cupomUsado}</p>` : ''}
                                 <p><strong>Pagamento:</strong> ${p.pagamento || ''} | <strong style="color:var(--success);">R$ ${(p.valorTotal || 0).toFixed(2)}</strong></p>
                                 <p><strong>Troco:</strong> ${p.detalheTroco || 'Não informado'}</p>
                                 <p><strong>Status Atual:</strong> <span style="color: #ff4757; font-weight: bold;">${p.status}</span></p>
@@ -1150,7 +1282,6 @@
                                 <p><strong>Cliente:</strong> ${p.clienteNome || 'Anônimo'}</p>
                                 <p><strong>Itens:</strong> ${itensHtml}</p>
                                 <p><strong>Valor:</strong> <span style="color:var(--success); font-weight:bold;">R$ ${(p.valorTotal || 0).toFixed(2)}</span> (${p.pagamento || ''})</p>
-                                <p><strong>Troco:</strong> ${p.detalheTroco || 'N/A'}</p>
                                 <button class="btn-primary" style="background: #ff4757; font-size: 0.85rem; padding: 8px; margin-top: 10px;" onclick="excluirPedidoCaixa('${id}')">🗑️ Apagar este registro</button>
                             </div>
                         `;
@@ -1174,7 +1305,6 @@
             }
         }
 
-        // Removido o 'confirm()' antigo; agora usa apenas o banner e esconde sem fala indesejada
         async function excluirMeuPedido(id) {
             try {
                 await db.collection('pedidos').doc(id).update({
@@ -1186,7 +1316,6 @@
             }
         }
 
-        // Removido o 'confirm()' antigo do admin
         async function zerarCaixaDiario() {
             try {
                 const snapshot = await db.collection('pedidos').where('status', '==', 'Concluído').get();
@@ -1235,10 +1364,13 @@
                         if (pedidoAlt.clienteEmail === usuarioAtual.email) {
                             if (pedidoAlt.status === 'Em Preparo') {
                                 falarMensagem("Pedido em preparo");
+                                dispararPushNativo("Pedido Atualizado", "Seu pedido está em preparo!");
                             } else if (pedidoAlt.status === 'Saiu para Entrega') {
                                 falarMensagem("Saindo para a entrega, chego já");
+                                dispararPushNativo("Saiu para Entrega! 🛵", "Saindo para a entrega, chego já.");
                             } else if (pedidoAlt.status === 'Concluído') {
                                 falarMensagem("Avalie o nosso atendimento");
+                                dispararPushNativo("Pedido Concluído", "Avalie o nosso atendimento.");
                             }
                         }
                     }
@@ -1356,7 +1488,6 @@
                     avaliado: true
                 });
 
-                // Fala o agradecimento solicitado pela preferência
                 falarMensagem("Obrigado pela preferência");
                 mostrarBannerNotificacao("Obrigado pela sua avaliação!");
                 
@@ -1394,38 +1525,55 @@
         }
 
         async function enviarPromocao() {
-            const titulo = document.getElementById('adm-titulo-promo').value;
+            const destino = document.getElementById('adm-cupom-destino').value;
+            const titulo = document.getElementById('adm-titulo-promo').value.trim().toUpperCase();
+            const valorDesconto = parseFloat(document.getElementById('adm-valor-desconto').value);
             const texto = document.getElementById('adm-texto-promo').value;
-            if (!titulo || !texto) {
-                mostrarBannerNotificacao("Preencha todos os campos da promoção.", "#ff4757");
+
+            if (!titulo || isNaN(valorDesconto) || !texto) {
+                mostrarBannerNotificacao("Preencha todos os campos do cupom.", "#ff4757");
                 return;
             }
+
             try {
                 await db.collection('promocoes').add({
-                    titulo, texto,
+                    destino, // 'todos' ou o e-mail específico
+                    titulo,
+                    valorDesconto,
+                    texto,
                     data: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                mostrarBannerNotificacao("Promoção enviada com sucesso!");
+                mostrarBannerNotificacao("Cupom gerado e enviado com sucesso!");
                 document.getElementById('adm-titulo-promo').value = '';
+                document.getElementById('adm-valor-desconto').value = '';
                 document.getElementById('adm-texto-promo').value = '';
             } catch (error) {
                 mostrarBannerNotificacao("Erro: " + error.message, "#ff4757");
             }
         }
 
-        function carregarPromocoes() {
+        function carregarPromocoesCliente() {
             const container = document.getElementById('lista-promocoes-cliente');
             db.collection('promocoes').onSnapshot(snapshot => {
                 container.innerHTML = '';
-                if (snapshot.empty) {
-                    container.innerHTML = `<div class="card"><p>Nenhum cupom ativo no momento.</p></div>`;
+                let meusCupons = [];
+                snapshot.forEach(doc => {
+                    let p = doc.data();
+                    if (p.destino === 'todos' || p.destino === usuarioAtual.email) {
+                        meusCupons.push(p);
+                    }
+                });
+
+                if (meusCupons.length === 0) {
+                    container.innerHTML = `<div class="card"><p style="text-align:center;">Nenhum cupom disponível no momento.</p></div>`;
                     return;
                 }
-                snapshot.forEach(doc => {
-                    const p = doc.data();
+
+                meusCupons.forEach(p => {
                     container.innerHTML += `
-                        <div class="card">
-                            <h3>🎁 ${p.titulo}</h3>
+                        <div class="card" style="border-left: 5px solid var(--primary);">
+                            <h3>🎁 ${p.titulo} (${p.destino === 'todos' ? 'Geral' : 'Exclusivo para você'})</h3>
+                            <p style="margin: 6px 0;">Desconto: <strong>R$ ${(p.valorDesconto || 0).toFixed(2)}</strong></p>
                             <p>${p.texto}</p>
                         </div>
                     `;
