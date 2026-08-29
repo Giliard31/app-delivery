@@ -76,6 +76,37 @@
             display: block;
         }
 
+        /* Menu Superior do Cliente (Cardápio, Meus Pedidos, Carrinho) */
+        .top-subnav {
+            display: flex;
+            justify-content: space-between;
+            background: var(--white);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            gap: 5px;
+        }
+
+        .top-subnav button {
+            flex: 1;
+            background: #f1f2f6;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #57606f;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .top-subnav button.active {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        /* Menu Inferior do Cliente (Cupons e Avaliações) */
         nav {
             position: fixed;
             bottom: 0;
@@ -93,7 +124,7 @@
             background: none;
             border: none;
             color: #747d8c;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -163,6 +194,24 @@
             background: var(--primary-dark);
         }
 
+        /* Banner de Notificação Flutuante no App */
+        #notification-banner {
+            position: fixed;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2ed573;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            z-index: 1000;
+            display: none;
+            font-weight: bold;
+            text-align: center;
+            max-width: 90%;
+        }
+
         /* Animação da Moto para Entrega */
         @keyframes andarMoto {
             0% { transform: translateX(0px); }
@@ -183,6 +232,9 @@
     </style>
 </head>
 <body>
+
+    <!-- Alerta de Notificação no topo -->
+    <div id="notification-banner">🔔 Novo prato adicionado ao cardápio!</div>
 
     <header>
         <span id="app-title">🍔 Meu Delivery</span>
@@ -207,6 +259,13 @@
         <!-- ================= VISÃO DO CLIENTE ================= -->
         <div id="view-cliente" class="view-section">
             
+            <!-- Menu Superior do Cliente (Cardápio, Meus Pedidos, Carrinho) -->
+            <div class="top-subnav">
+                <button id="btn-subnav-vitrine" class="active" onclick="mudarAbaCliente('vitrine')">🏠 Cardápio</button>
+                <button id="btn-subnav-pedidos" onclick="mudarAbaCliente('pedidos-cliente')">📦 Meus Pedidos</button>
+                <button id="btn-subnav-carrinho" onclick="mudarAbaCliente('carrinho')">🛒 Carrinho</button>
+            </div>
+
             <!-- Aba Vitrine / Cardápio -->
             <div id="tab-vitrine" class="cliente-tab active">
                 <h2>Cardápio do Dia</h2>
@@ -215,22 +274,12 @@
                 </div>
             </div>
 
-            <!-- NOVA ABA: Acompanhar Pedidos -->
+            <!-- Aba Acompanhar Pedidos -->
             <div id="tab-pedidos-cliente" class="cliente-tab" style="display:none;">
                 <h2>Meus Pedidos</h2>
                 <p style="color: #666; margin-bottom: 15px; font-size: 0.95rem;">Acompanhe o status do seu pedido em tempo real:</p>
                 <div id="lista-pedidos-cliente">
                     <p style="text-align:center;">Você ainda não fez nenhum pedido.</p>
-                </div>
-            </div>
-
-            <!-- Aba Cupons e Promoções -->
-            <div id="tab-promocoes" class="cliente-tab" style="display:none;">
-                <h2>Cupons e Mensagens</h2>
-                <div id="lista-promocoes-cliente">
-                    <div class="card">
-                        <p>🎁 <strong>BEMVINDO10</strong> - Use este cupom para ganhar desconto!</p>
-                    </div>
                 </div>
             </div>
 
@@ -248,11 +297,21 @@
                 <button class="btn-primary" onclick="finalizarPedido()">Finalizar Pedido</button>
             </div>
 
-            <!-- Aba Avaliação -->
+            <!-- Aba Cupons e Promoções (Inferior) -->
+            <div id="tab-promocoes" class="cliente-tab" style="display:none;">
+                <h2>Cupons e Promoções</h2>
+                <div id="lista-promocoes-cliente" style="margin-top: 15px;">
+                    <div class="card">
+                        <p>🎁 <strong>BEMVINDO10</strong> - Use este cupom para ganhar desconto!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aba Avaliação (Inferior) -->
             <div id="tab-perfil" class="cliente-tab" style="display:none;">
                 <h2>Avalie o Atendimento</h2>
                 <div class="card">
-                    <p>Como foi sua experiência?</p>
+                    <p>Como foi sua experiência geral?</p>
                     <select id="nota-avaliacao">
                         <option value="5">⭐⭐⭐⭐⭐ - Excelente</option>
                         <option value="4">⭐⭐⭐⭐ - Muito Bom</option>
@@ -283,7 +342,7 @@
                         <option value="disponivel">Disponível</option>
                         <option value="indisponivel">Indisponível (Esgotado)</option>
                     </select>
-                    <button class="btn-primary" onclick="cadastrarProduto()">Salvar Produto na Vitrine</button>
+                    <button class="btn-primary" onclick="cadastrarProduto()">Salvar Produto e Alertar Clientes</button>
                 </div>
 
                 <h2>Produtos Cadastrados</h2>
@@ -321,13 +380,10 @@
         </div>
     </main>
 
-    <!-- Menu de Navegação do Cliente (Com a Aba Meus Pedidos inclusa) -->
+    <!-- Menu Inferior do Cliente (Apenas Cupons e Avaliação) -->
     <nav id="nav-cliente" style="display:none;">
-        <button onclick="mudarAbaCliente('vitrine')" class="active">🏠 Cardápio</button>
-        <button onclick="mudarAbaCliente('pedidos-cliente')">📦 Meus Pedidos</button>
-        <button onclick="mudarAbaCliente('promocoes')">🎁 Cupons</button>
-        <button onclick="mudarAbaCliente('carrinho')">🛒 Carrinho</button>
-        <button onclick="mudarAbaCliente('perfil')">⭐ Avaliar</button>
+        <button id="nav-btn-promocoes" onclick="mudarAbaCliente('promocoes')" class="active">🎁 Cupons</button>
+        <button id="nav-btn-perfil" onclick="mudarAbaCliente('perfil')">⭐ Avaliar</button>
     </nav>
 
     <!-- Menu de Navegação do Administrador -->
@@ -371,7 +427,7 @@
 
         let usuarioAtual = null;
         let carrinho = [];
-        let timerIntervalos = {}; // Armazena os timers ativos
+        let timerIntervalos = {};
 
         auth.onAuthStateChanged((user) => {
             if (user) {
@@ -397,6 +453,7 @@
                     carregarProdutosCliente();
                     carregarPromocoes();
                     carregarPedidosCliente();
+                    ouvirNotificacoesNovosPratos();
                 }
             } else {
                 usuarioAtual = null;
@@ -442,9 +499,16 @@
 
         function mudarAbaCliente(aba) {
             document.querySelectorAll('.cliente-tab').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.top-subnav button').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('#nav-cliente button').forEach(el => el.classList.remove('active'));
+
             document.getElementById('tab-' + aba).style.display = 'block';
-            event.currentTarget.classList.add('active');
+
+            if (aba === 'vitrine' || aba === 'pedidos-cliente' || aba === 'carrinho') {
+                document.getElementById('btn-subnav-' + (aba === 'pedidos-cliente' ? 'pedidos' : aba)).classList.add('active');
+            } else {
+                document.getElementById('nav-btn-' + aba).classList.add('active');
+            }
         }
 
         function mudarAbaAdmin(aba) {
@@ -452,6 +516,31 @@
             document.querySelectorAll('#nav-admin button').forEach(el => el.classList.remove('active'));
             document.getElementById('admin-tab-' + aba).style.display = 'block';
             event.currentTarget.classList.add('active');
+        }
+
+        // --- SISTEMA DE NOTIFICAÇÃO DE NOVO PRATO ---
+        function ouvirNotificacoesNovosPratos() {
+            let primeiraVez = true;
+            db.collection('produtos').orderBy('criadoEm', 'desc').limit(1).onSnapshot(snapshot => {
+                if (primeiraVez) {
+                    primeiraVez = false;
+                    return; 
+                }
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === 'added') {
+                        mostrarBannerNotificacao("🔔 Novo prato adicionado ao cardápio!");
+                    }
+                });
+            });
+        }
+
+        function mostrarBannerNotificacao(texto) {
+            const banner = document.getElementById('notification-banner');
+            banner.innerText = texto;
+            banner.style.display = 'block';
+            setTimeout(() => {
+                banner.style.display = 'none';
+            }, 5000);
         }
 
         // --- PRODUTOS ---
@@ -471,7 +560,7 @@
                     nome, preco, fotoUrl, status,
                     criadoEm: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                alert("Produto cadastrado com sucesso!");
+                alert("Produto cadastrado com sucesso! Notificação disparada para os clientes.");
                 document.getElementById('adm-nome-produto').value = '';
                 document.getElementById('adm-preco-produto').value = '';
                 document.getElementById('adm-foto-produto').value = '';
@@ -591,7 +680,7 @@
                     tempoMinutos: 0,
                     data: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                alert("Pedido realizado com sucesso! Acompanhe na aba Meus Pedidos.");
+                alert("Pedido realizado com sucesso! Acompanhe na aba 'Meus Pedidos'.");
                 carrinho = [];
                 atualizarVisualCarrinho();
                 mudarAbaCliente('pedidos-cliente');
@@ -657,7 +746,6 @@
                     return;
                 }
 
-                // Limpa timers antigos
                 Object.values(timerIntervalos).forEach(clearInterval);
                 timerIntervalos = {};
 
@@ -671,7 +759,7 @@
                         statusHtml = `
                             <div style="background:#e3f2fd; padding: 12px; border-radius: 8px; text-align:center; margin-top: 10px;">
                                 <p>🎉 <strong>Pedido Concluído!</strong></p>
-                                <button class="btn-primary" onclick="mudarAbaCliente('perfil')">Avaliar Atendimento ⭐</button>
+                                <button class="btn-primary" onclick="mudarAbaCliente('perfil')">Avaliar Atendimento Agora ⭐</button>
                             </div>
                         `;
                     } else if (pedido.status === 'Saiu para Entrega') {
@@ -712,7 +800,7 @@
         }
 
         function iniciarCronometroEspecifico(id, minutos) {
-            let tempoRestante = minutos * 60; // segundos
+            let tempoRestante = minutos * 60;
 
             timerIntervalos[id] = setInterval(() => {
                 let elemento = document.getElementById('cronometro-' + id);
