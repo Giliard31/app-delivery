@@ -529,6 +529,17 @@
         let pedidoConcluidoNaoAvaliadoId = null;
         let pingInterval = null;
 
+        // Função para o celular falar textos em voz alta
+        function falarMensagem(texto) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Para qualquer fala anterior para não embolar
+                let msg = new SpeechSynthesisUtterance(texto);
+                msg.lang = 'pt-BR';
+                msg.rate = 1.0; // Velocidade normal
+                window.speechSynthesis.speak(msg);
+            }
+        }
+
         auth.onAuthStateChanged((user) => {
             if (user) {
                 usuarioAtual = user;
@@ -549,6 +560,7 @@
                     carregarPedidosAdmin();
                     carregarCaixaAdmin();
                     monitorarPessoasOnlineAdmin();
+                    ouvirPedidosNovosAdmin(); // Monitora novos pedidos para falar "Pedido"
                 } else {
                     document.getElementById('view-admin').classList.remove('active');
                     document.getElementById('view-cliente').classList.add('active');
@@ -589,7 +601,7 @@
             }
 
             atualizarPing();
-            pingInterval = setInterval(atualizarPing, 15000); // Atualiza a cada 15 segundos
+            pingInterval = setInterval(atualizarPing, 15000);
         }
 
         function pararPresencaOnline() {
@@ -608,7 +620,6 @@
                     let dados = doc.data();
                     if (dados.ultimaVez) {
                         let tempoConexao = dados.ultimaVez.toDate().getTime();
-                        // Considera online se atualizou nos últimos 45 segundos
                         if ((agora - tempoConexao) < 45000) {
                             contadorAtivos++;
                         }
@@ -834,6 +845,22 @@
                 snapshot.docChanges().forEach(change => {
                     if (change.type === 'added') {
                         mostrarBannerNotificacao("🔔 Novo prato adicionado ao cardápio!");
+                    }
+                });
+            });
+        }
+
+        // Função específica para o Admin ouvir novos pedidos em tempo real
+        function ouvirPedidosNovosAdmin() {
+            let primeiraVez = true;
+            db.collection('pedidos').orderBy('data', 'desc').limit(1).onSnapshot(snapshot => {
+                if (primeiraVez) {
+                    primeiraVez = false;
+                    return;
+                }
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === 'added') {
+                        falarMensagem("Pedido");
                     }
                 });
             });
@@ -1182,10 +1209,29 @@
             if (!usuarioAtual) return;
             const container = document.getElementById('lista-pedidos-cliente');
             
+            let primeiroCarregamento = true;
+
             db.collection('pedidos').orderBy('data', 'desc').onSnapshot(snapshot => {
                 container.innerHTML = '';
                 let meusPedidos = [];
                 let temConcluidoNaoAvaliado = false;
+
+                snapshot.docChanges().forEach(change => {
+                    if (!primeiroCarregamento && change.type === 'modified') {
+                        let pedidoAlt = change.doc.data();
+                        if (pedidoAlt.clienteEmail === usuarioAtual.email) {
+                            if (pedidoAlt.status === 'Em Preparo') {
+                                falarMensagem("Preparando");
+                            } else if (pedidoAlt.status === 'Saiu para Entrega') {
+                                falarMensagem("Estou indo aí");
+                            } else if (pedidoAlt.status === 'Concluído') {
+                                falarMensagem("Avalie o nosso atendimento");
+                            }
+                        }
+                    }
+                });
+
+                primeiroCarregamento = false;
 
                 snapshot.forEach(doc => {
                     let pedido = doc.data();
