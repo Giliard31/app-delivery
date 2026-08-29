@@ -242,7 +242,7 @@
         <!-- ================= VISÃO DO ADMINISTRADOR ================= -->
         <div id="view-admin" class="view-section">
             
-            <!-- Admin: Vitrine -->
+            <!-- Admin: Vitrine / Cadastro -->
             <div id="admin-tab-vitrine" class="admin-tab">
                 <h2>Gerenciar Vitrine</h2>
                 <div class="card">
@@ -252,6 +252,11 @@
                     <input type="url" id="adm-foto-produto" placeholder="Link da Foto (Ex: https://...)" required>
                     <small style="color: #747d8c; display: block; margin-top: -5px; margin-bottom: 10px;">Dica: Cole o link direto de uma imagem da internet.</small>
                     <button class="btn-primary" onclick="cadastrarProduto()">Salvar Produto na Vitrine</button>
+                </div>
+
+                <h2>Produtos na Vitrine</h2>
+                <div id="lista-produtos-admin" style="margin-top: 15px;">
+                    <p>Carregando produtos...</p>
                 </div>
             </div>
 
@@ -317,13 +322,13 @@
             measurementId: "G-1SVFNTGSXM"
         };
 
-        // Inicializa Firebase (Apenas Auth e Firestore - 100% Gratuito)
+        // Inicializa Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
 
         // ⚠️ COLOQUE AQUI O SEU E-MAIL EXATO DE ADMINISTRADOR:
-        const ADMIN_EMAIL = "giliardmartins31@gmail.com"; 
+        const ADMIN_EMAIL = "giliardmartins@gmail.com"; 
 
         let usuarioAtual = null;
         let carrinho = [];
@@ -342,6 +347,7 @@
                     document.getElementById('nav-admin').style.display = 'flex';
                     document.getElementById('nav-cliente').style.display = 'none';
                     document.getElementById('app-title').innerText = '🛠️ Painel Admin';
+                    carregarProdutosAdmin();
                     carregarAvaliacoesAdmin();
                     carregarPedidosAdmin();
                 } else {
@@ -351,7 +357,7 @@
                     document.getElementById('nav-cliente').style.display = 'flex';
                     document.getElementById('nav-admin').style.display = 'none';
                     document.getElementById('app-title').innerText = '🍔 Meu Delivery';
-                    carregarProdutos();
+                    carregarProdutosCliente();
                     carregarPromocoes();
                 }
             } else {
@@ -412,7 +418,7 @@
             event.currentTarget.classList.add('active');
         }
 
-        // --- CADASTRO E VITRINE (ADMIN) USANDO URL ---
+        // --- CADASTRO E VITRINE (ADMIN) ---
         async function cadastrarProduto() {
             const nome = document.getElementById('adm-nome-produto').value;
             const preco = parseFloat(document.getElementById('adm-preco-produto').value);
@@ -440,7 +446,7 @@
             }
         }
 
-        function carregarProdutos() {
+        function carregarProdutosCliente() {
             const container = document.getElementById('lista-produtos-cliente');
             db.collection('produtos').onSnapshot(snapshot => {
                 container.innerHTML = '';
@@ -456,6 +462,27 @@
                             <h3>${p.nome}</h3>
                             <p style="color: #2ed573; font-weight: bold; margin: 8px 0; font-size: 1.1rem;">R$ ${p.preco.toFixed(2)}</p>
                             <button class="btn-primary" onclick="adicionarCarrinho('${p.nome}', ${p.preco})">Pedir</button>
+                        </div>
+                    `;
+                });
+            });
+        }
+
+        function carregarProdutosAdmin() {
+            const container = document.getElementById('lista-produtos-admin');
+            db.collection('produtos').onSnapshot(snapshot => {
+                container.innerHTML = '';
+                if (snapshot.empty) {
+                    container.innerHTML = `<p>Nenhum produto cadastrado no momento.</p>`;
+                    return;
+                }
+                snapshot.forEach(doc => {
+                    const p = doc.data();
+                    container.innerHTML += `
+                        <div class="produto-card">
+                            <img src="${p.fotoUrl}" alt="${p.nome}">
+                            <h3>${p.nome}</h3>
+                            <p style="color: #2ed573; font-weight: bold; margin: 8px 0; font-size: 1.1rem;">R$ ${p.preco.toFixed(2)}</p>
                         </div>
                     `;
                 });
@@ -532,7 +559,7 @@
             const pagamento = document.getElementById('forma-pagamento').value;
             try {
                 await db.collection('pedidos').add({
-                    clienteEmail: usuarioAtual.email,
+                    clienteEmail: usuarioAtual ? usuarioAtual.email : "Cliente Anônimo",
                     itens: carrinho,
                     pagamento,
                     status: "Em Preparo",
@@ -557,12 +584,12 @@
                 }
                 snapshot.forEach(doc => {
                     const p = doc.data();
-                    let itensHtml = p.itens.map(i => `${i.name} (x${i.quantidade})`).join(', ');
+                    let itensHtml = p.itens ? p.itens.map(i => `${i.name} (x${i.quantidade})`).join(', ') : '';
                     container.innerHTML += `
                         <div class="card">
                             <p><strong>Cliente:</strong> ${p.clienteEmail}</p>
                             <p><strong>Itens:</strong> ${itensHtml}</p>
-                            <p><strong>Pagamento:</strong> ${p.pagamento.toUpperCase()}</p>
+                            <p><strong>Pagamento:</strong> ${(p.pagamento || '').toUpperCase()}</p>
                             <p><strong>Status:</strong> <span style="color: #ff4757; font-weight: bold;">${p.status}</span></p>
                         </div>
                     `;
@@ -570,13 +597,13 @@
             });
         }
 
-        // --- AVALIAÇÕES E PROMOÇÕES (CLIENTE / ADMIN) ---
+        // --- AVALIAÇÕES E PROMOÇÕES ---
         async function enviarAvaliacao() {
             const nota = document.getElementById('nota-avaliacao').value;
             const comentario = document.getElementById('comentario-avaliacao').value;
             try {
                 await db.collection('avaliacoes').add({
-                    email: usuarioAtual.email,
+                    email: usuarioAtual ? usuarioAtual.email : "Anônimo",
                     nota,
                     comentario,
                     data: firebase.firestore.FieldValue.serverTimestamp()
