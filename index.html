@@ -45,19 +45,6 @@
             font-size: 1.2rem;
             font-weight: bold;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        header button {
-            background: none;
-            border: 1px solid var(--white);
-            color: var(--white);
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.8rem;
         }
 
         main {
@@ -163,14 +150,13 @@
 
     <header>
         <span id="app-title">🍔 Meu Delivery</span>
-        <button id="btn-alternar-modo" onclick="alternarModoAdmin()" style="display:none;">Painel Admin</button>
     </header>
 
     <main>
         <!-- ================= TELA DE LOGIN / RECUPERAÇÃO DE SENHA ================= -->
         <div id="view-auth" class="view-section active">
             <div id="auth-container" class="card">
-                <h2 id="auth-titulo" style="text-align: center; margin-bottom: 15px;">Entrar no App</h2>
+                <h2 style="text-align: center; margin-bottom: 15px;">Entrar no App</h2>
                 <input type="email" id="auth-email" placeholder="Seu e-mail cadastrado">
                 <input type="password" id="auth-senha" placeholder="Sua senha">
                 <button class="btn-primary" onclick="fazerLogin()">Entrar</button>
@@ -188,7 +174,7 @@
             <div id="tab-vitrine" class="cliente-tab active">
                 <h2>Cardápio do Dia</h2>
                 <div id="lista-produtos-cliente" style="margin-top: 15px;">
-                    <!-- Produtos salvos no Firebase aparecerão aqui -->
+                    <!-- Produtos do Firebase -->
                 </div>
             </div>
 
@@ -302,7 +288,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
     <script>
-        // Configuração do Firebase fornecida
+        // Configuração do Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyDxHIeZNBj30ohn5g9zu6puyEB7NZ5ru28",
             authDomain: "meudeliveryapp-eefb2.firebaseapp.com",
@@ -319,27 +305,28 @@
         const db = firebase.firestore();
         const storage = firebase.storage();
 
-        // E-mail do Administrador
-        const ADMIN_EMAIL = "giliardmartins31@admin.com"; // Substitua pelo seu e-mail de login admin
+        // ⚠️ MUDE AQUI PARA O SEU E-MAIL DE ADMINISTRADOR EXATO:
+        const ADMIN_EMAIL = "giliardmartins31@admin.com"; 
 
         let usuarioAtual = null;
-        let isAdm = false;
         let carrinho = [];
 
-        // Controle de Sessão
+        // Controle de Sessão Automático por E-mail
         auth.onAuthStateChanged((user) => {
             if (user) {
                 usuarioAtual = user;
                 document.getElementById('view-auth').classList.remove('active');
                 
                 if (user.email === ADMIN_EMAIL) {
-                    isAdm = true;
-                    document.getElementById('btn-alternar-modo').style.display = 'block';
-                    alternarModoAdmin(); // Entra direto no admin se quiser
+                    // Reconhecido como Administrador
+                    document.getElementById('view-admin').classList.add('active');
+                    document.getElementById('nav-admin').style.display = 'flex';
+                    document.getElementById('app-title').innerText = '🛠️ Painel Admin';
                 } else {
-                    isAdm = false;
+                    // Reconhecido como Cliente
                     document.getElementById('view-cliente').classList.add('active');
                     document.getElementById('nav-cliente').style.display = 'flex';
+                    document.getElementById('app-title').innerText = '🍔 Meu Delivery';
                 }
                 carregarProdutos();
                 carregarPromocoes();
@@ -350,7 +337,7 @@
                 document.getElementById('view-admin').classList.remove('active');
                 document.getElementById('nav-cliente').style.display = 'none';
                 document.getElementById('nav-admin').style.display = 'none';
-                document.getElementById('btn-alternar-modo').style.display = 'none';
+                document.getElementById('app-title').innerText = '🍔 Meu Delivery';
             }
         });
 
@@ -378,32 +365,6 @@
             auth.sendPasswordResetEmail(email)
                 .then(() => alert("E-mail de recuperação de senha enviado com sucesso!"))
                 .catch(error => alert("Erro: " + error.message));
-        }
-
-        function alternarModoAdmin() {
-            isAdm = !isAdm;
-            const viewCliente = document.getElementById('view-cliente');
-            const viewAdmin = document.getElementById('view-admin');
-            const navCliente = document.getElementById('nav-cliente');
-            const navAdmin = document.getElementById('nav-admin');
-            const btnModo = document.getElementById('btn-alternar-modo');
-            const titulo = document.getElementById('app-title');
-
-            if (isAdm) {
-                viewCliente.classList.remove('active');
-                viewAdmin.classList.add('active');
-                navCliente.style.display = 'none';
-                navAdmin.style.display = 'flex';
-                btnModo.innerText = 'Modo Cliente';
-                titulo.innerText = '🛠️ Painel Admin';
-            } else {
-                viewAdmin.classList.remove('active');
-                viewCliente.classList.add('active');
-                navAdmin.style.display = 'none';
-                navCliente.style.display = 'flex';
-                btnModo.innerText = 'Painel Admin';
-                titulo.innerText = '🍔 Meu Delivery';
-            }
         }
 
         function mudarAbaCliente(aba) {
@@ -593,329 +554,6 @@
                     `;
                 });
             });
-        }
-    </script>
-</body>
-</html>
-        header button {
-            background: none;
-            border: 1px solid var(--white);
-            color: var(--white);
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        main {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px;
-            padding-bottom: 70px;
-        }
-
-        .view-section {
-            display: none;
-        }
-
-        .view-section.active {
-            display: block;
-        }
-
-        /* Abas de Navegação Inferior */
-        nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: var(--white);
-            display: flex;
-            justify-content: space-around;
-            padding: 10px 0;
-            box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
-        }
-
-        nav button {
-            background: none;
-            border: none;
-            color: #747d8c;
-            font-size: 0.8rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            cursor: pointer;
-        }
-
-        nav button.active {
-            color: var(--primary);
-            font-weight: bold;
-        }
-
-        /* Estilos de Cartões e Formulários */
-        .card {
-            background: var(--white);
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 10px;
-            margin: 8px 0;
-            border: 1px solid var(--gray);
-            border-radius: 6px;
-        }
-
-        button.btn-primary {
-            background: var(--primary);
-            color: var(--white);
-            border: none;
-            padding: 12px;
-            width: 100%;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 5px;
-        }
-
-        button.btn-primary:active {
-            background: var(--primary-dark);
-        }
-
-        .badge {
-            background: #ff4757;
-            color: white;
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-size: 0.7rem;
-        }
-    </style>
-</head>
-<body>
-
-    <header>
-        <span id="app-title">🍔 Meu Delivery</span>
-        <button id="btn-alternar-modo" onclick="alternarModoAdmin()">Modo Admin</button>
-    </header>
-
-    <main>
-        <!-- ================= VISÃO DO CLIENTE ================= -->
-        <div id="view-cliente" class="view-section active">
-            
-            <!-- Aba Vitrine / Cardápio -->
-            <div id="tab-vitrine" class="cliente-tab active">
-                <h2>Cardápio do Dia</h2>
-                <div id="lista-produtos-cliente">
-                    <div class="card">
-                        <h3>X-Burger Especial</h3>
-                        <p>Pão, carne artesanal, queijo e molho da casa.</p>
-                        <p><strong>R$ 25,00</strong></p>
-                        <button class="btn-primary" onclick="adicionarAoCarrinho('X-Burger Especial', 25)">Pedir</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Aba Cupons e Promoções -->
-            <div id="tab-promocoes" class="cliente-tab" style="display:none;">
-                <h2>Cupons Disponíveis</h2>
-                <div class="card">
-                    <p>🎁 <strong>BEMVINDO10</strong> - R$ 10 de desconto na primeira compra!</p>
-                </div>
-                <div id="lista-mensagens-cliente"></div>
-            </div>
-
-            <!-- Aba Carrinho / Pagamento -->
-            <div id="tab-carrinho" class="cliente-tab" style="display:none;">
-                <h2>Seu Pedido</h2>
-                <div id="itens-carrinho" class="card">
-                    <p>Seu carrinho está vazio.</p>
-                </div>
-                <h3>Forma de Pagamento</h3>
-                <select id="forma-pagamento">
-                    <option value="pix">Pix (Manual)</option>
-                    <option value="dinheiro">Dinheiro</option>
-                </select>
-                <button class="btn-primary" onclick="finalizarPedido()">Finalizar Pedido</button>
-            </div>
-
-            <!-- Aba Perfil / Avaliação -->
-            <div id="tab-perfil" class="cliente-tab" style="display:none;">
-                <h2>Minha Conta & Avaliações</h2>
-                <div class="card">
-                    <p>Avalie nosso atendimento:</p>
-                    <select id="nota-avaliacao">
-                        <option value="5">⭐⭐⭐⭐⭐ - Excelente</option>
-                        <option value="4">⭐⭐⭐⭐ - Muito Bom</option>
-                        <option value="3">⭐⭐⭐ - Regular</option>
-                        <option value="2">⭐⭐ - Ruim</option>
-                        <option value="1">⭐ - Péssimo</option>
-                    </select>
-                    <textarea id="comentario-avaliacao" placeholder="Deixe seu comentário..."></textarea>
-                    <button class="btn-primary" onclick="enviarAvaliacaoApp()">Enviar Avaliação</button>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- ================= VISÃO DO ADMINISTRADOR ================= -->
-        <div id="view-admin" class="view-section">
-            
-            <!-- Admin: Vitrine -->
-            <div id="admin-tab-vitrine" class="admin-tab">
-                <h2>Gerenciar Vitrine</h2>
-                <div class="card">
-                    <h3>Cadastrar Produto</h3>
-                    <input type="text" id="adm-nome-produto" placeholder="Nome do Produto">
-                    <input type="text" id="adm-preco-produto" placeholder="Preço (Ex: 30.00)">
-                    <input type="file" id="adm-foto-produto" accept="image/*">
-                    <button class="btn-primary" onclick="cadastrarProdutoAdmin()">Salvar Produto</button>
-                </div>
-            </div>
-
-            <!-- Admin: Pedidos e Entregas -->
-            <div id="admin-tab-pedidos" class="admin-tab" style="display:none;">
-                <h2>Pedidos em Tempo Real</h2>
-                <div id="lista-pedidos-admin">
-                    <div class="card">
-                        <p><strong>Cliente:</strong> João Silva</p>
-                        <p><strong>Item:</strong> X-Burger Especial (Pix)</p>
-                        <p><strong>Status:</strong> <span style="color: orange;">Em Preparo</span></p>
-                        <button class="btn-primary" onclick="avancarStatus('Saiu para Entrega', 30)">Saiu para Entrega (Regressivo 30 min)</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Admin: Avaliações recebidas -->
-            <div id="admin-tab-avaliacoes" class="admin-tab" style="display:none;">
-                <h2>Avaliações dos Clientes</h2>
-                <div id="lista-avaliacoes-admin">
-                    <div class="card">
-                        <p><strong>Nota: ⭐⭐⭐⭐⭐</strong></p>
-                        <p>"Comida chegou quente e muito rápida!"</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Admin: Enviar Promoções -->
-            <div id="admin-tab-mensagens" class="admin-tab" style="display:none;">
-                <h2>Central de Mensagens e Cupons</h2>
-                <div class="card">
-                    <input type="text" id="adm-titulo-promo" placeholder="Título da Promoção">
-                    <textarea id="adm-texto-promo" placeholder="Digite a mensagem promocional ou código do cupom..."></textarea>
-                    <button class="btn-primary" onclick="enviarPromocaoAdmin()">Transmitir aos Clientes</button>
-                </div>
-            </div>
-
-        </div>
-    </main>
-
-    <!-- Menu de Navegação Inferior (Dinâmico conforme o modo) -->
-    <nav id="nav-cliente">
-        <button onclick="mudarAbaCliente('vitrine')" class="active">🏠 Cardápio</button>
-        <button onclick="mudarAbaCliente('promocoes')">🎁 Cupons</button>
-        <button onclick="mudarAbaCliente('carrinho')">🛒 Carrinho</button>
-        <button onclick="mudarAbaCliente('perfil')">⭐ Avaliar</button>
-    </nav>
-
-    <nav id="nav-admin" style="display:none;">
-        <button onclick="mudarAbaAdmin('vitrine')" class="active">🍔 Vitrine</button>
-        <button onclick="mudarAbaAdmin('pedidos')">📦 Pedidos</button>
-        <button onclick="mudarAbaAdmin('avaliacoes')">⭐ Avaliações</button>
-        <button onclick="mudarAbaAdmin('mensagens')">📢 Promoções</button>
-    </nav>
-
-    <script>
-        let isAdm = false;
-
-        function alternarModoAdmin() {
-            isAdm = !isAdm;
-            const viewCliente = document.getElementById('view-cliente');
-            const viewAdmin = document.getElementById('view-admin');
-            const navCliente = document.getElementById('nav-cliente');
-            const navAdmin = document.getElementById('nav-admin');
-            const btnModo = document.getElementById('btn-alternar-modo');
-            const titulo = document.getElementById('app-title');
-
-            if (isAdm) {
-                viewCliente.classList.remove('active');
-                viewAdmin.classList.add('active');
-                navCliente.style.display = 'none';
-                navAdmin.style.display = 'flex';
-                btnModo.innerText = 'Modo Cliente';
-                titulo.innerText = '🛠️ Painel Admin';
-            } else {
-                viewAdmin.classList.remove('active');
-                viewCliente.classList.add('active');
-                navAdmin.style.display = 'none';
-                navCliente.style.display = 'flex';
-                btnModo.innerText = 'Modo Admin';
-                titulo.innerText = '🍔 Meu Delivery';
-            }
-        }
-
-        function mudarAbaCliente(aba) {
-            document.querySelectorAll('.cliente-tab').forEach(el => el.style.display = 'none');
-            document.querySelectorAll('#nav-cliente button').forEach(el => el.classList.remove('active'));
-            
-            if (aba === 'vitrine') {
-                document.getElementById('tab-vitrine').style.display = 'block';
-                event.currentTarget.classList.add('active');
-            } else if (aba === 'promocoes') {
-                document.getElementById('tab-promocoes').style.display = 'block';
-                event.currentTarget.classList.add('active');
-            } else if (aba === 'carrinho') {
-                document.getElementById('tab-carrinho').style.display = 'block';
-                event.currentTarget.classList.add('active');
-            } else if (aba === 'perfil') {
-                document.getElementById('tab-perfil').style.display = 'block';
-                event.currentTarget.classList.add('active');
-            }
-        }
-
-        function mudarAbaAdmin(aba) {
-            document.querySelectorAll('.admin-tab').forEach(el => el.style.display = 'none');
-            document.querySelectorAll('#nav-admin button').forEach(el => el.classList.remove('active'));
-
-            if (aba === 'vitrine') {
-                document.getElementById('admin-tab-vitrine').style.display = 'block';
-                event.currentTarget.classList.add('active');
-            } else if (aba === 'pedidos') {
-                document.getElementById('admin-tab-pedidos').style.display = 'block';
-                event.currentTarget.classList.add('active');
-            } else if (aba === 'avaliacoes') {
-                document.getElementById('admin-tab-avaliacoes').style.display = 'block';
-                event.currentTarget.classList.add('active');
-            } else if (aba === 'mensagens') {
-                document.getElementById('admin-tab-mensagens').style.display = 'block';
-                event.currentTarget.classList.add('active');
-            }
-        }
-
-        // Funções de Ação (Integração futura com Firebase)
-        function adicionarAoCarrinho(nome, preco) {
-            alert(nome + " adicionado ao carrinho!");
-        }
-
-        function finalizarPedido() {
-            const pagamento = document.getElementById('forma-pagamento').value;
-            alert("Pedido realizado com sucesso via " + pagamento.toUpperCase() + "! Aguarde a confirmação.");
-        }
-
-        function cadastrarProdutoAdmin() {
-            alert("Produto cadastrado com sucesso na vitrine!");
-        }
-
-        function avancarStatus(status, tempoMin) {
-            alert("Status atualizado para: " + status + ". Cronômetro regressivo de " + tempoMin + " min ativado para o cliente.");
-        }
-
-        function enviarAvaliacaoApp() {
-            alert("Obrigado pela sua avaliação!");
-        }
-
-        function enviarPromocaoAdmin() {
-            alert("Promoção transmitida para todos os clientes!");
         }
     </script>
 </body>
