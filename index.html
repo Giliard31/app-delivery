@@ -619,7 +619,6 @@
                     const p = doc.data();
                     const indisponivel = p.status === 'indisponivel';
                     
-                    // Verifica quantos itens já estão selecionados no carrinho deste produto
                     let itemNoCarrinho = carrinho.find(i => i.name === p.nome);
                     let quantidadeAtual = itemNoCarrinho ? itemNoCarrinho.quantidade : 0;
 
@@ -681,7 +680,6 @@
                 carrinho.push(item);
             }
 
-            // Atualiza o numerozinho direto no cardápio sem recriar tudo
             let spanQtd = document.getElementById('qtd-' + nome.replace(/\s+/g, '-'));
             if (spanQtd) {
                 spanQtd.innerText = item ? item.quantidade : 0;
@@ -726,7 +724,6 @@
             let itemRemovido = carrinho[index];
             carrinho.splice(index, 1);
             
-            // Atualiza o contador na vitrine caso esteja visível
             if (itemRemovido) {
                 let spanQtd = document.getElementById('qtd-' + itemRemovido.name.replace(/\s+/g, '-'));
                 if (spanQtd) spanQtd.innerText = 0;
@@ -753,9 +750,7 @@
                 alert("Pedido realizado com sucesso!");
                 carrinho = [];
                 atualizarVisualCarrinho();
-                carregarProdutosCliente(); // Reseta os contadores na vitrine
-                
-                // Manda o cliente direto para a aba "Meus Pedidos" para acompanhar em tempo real
+                carregarProdutosCliente(); 
                 mudarAbaCliente('pedidos-cliente');
             } catch (error) {
                 alert("Erro ao enviar pedido: " + error.message);
@@ -814,7 +809,6 @@
             if (!usuarioAtual) return;
             const container = document.getElementById('lista-pedidos-cliente');
             
-            // CORREÇÃO DA BUSCA: Carrega todos os pedidos e filtra no código para evitar falhas de índice composto do Firestore
             db.collection('pedidos').orderBy('data', 'desc').onSnapshot(snapshot => {
                 container.innerHTML = '';
                 let meusPedidos = [];
@@ -969,7 +963,7 @@
         function carregarPromocoes() {
             const container = document.getElementById('lista-promocoes-cliente');
             db.collection('promocoes').onSnapshot(snapshot => {
-                container.innerHTML =`;
+                container.innerHTML = '';
                 if (snapshot.empty) {
                     container.innerHTML = `<div class="card"><p>Nenhum cupom ativo no momento.</p></div>`;
                     return;
