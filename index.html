@@ -535,8 +535,21 @@
                 let msg = new SpeechSynthesisUtterance(texto);
                 msg.lang = 'pt-BR';
                 msg.rate = 1.0;
+                
+                // Tenta buscar uma voz de melhor qualidade / menos robótica do sistema
+                let vozes = window.speechSynthesis.getVoices();
+                let vozNatural = vozes.find(v => v.lang.includes('pt') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Luciana') || v.name.includes('Microsoft')));
+                if (vozNatural) {
+                    msg.voice = vozNatural;
+                }
+
                 window.speechSynthesis.speak(msg);
             }
+        }
+
+        // Garante o carregamento das vozes do navegador
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
         }
 
         auth.onAuthStateChanged((user) => {
@@ -857,7 +870,7 @@
                 }
                 snapshot.docChanges().forEach(change => {
                     if (change.type === 'added') {
-                        falarMensagem("Pedido");
+                        falarMensagem("Novo pedido recebido!");
                     }
                 });
             });
@@ -1061,7 +1074,7 @@
                     valorTotal: valorTotalPedido,
                     status: "Aguardando Preparo",
                     tempoMinutos: 0,
-                    visivelParaCliente: true, // <-- Mantém visível para o cliente inicialmente
+                    visivelParaCliente: true,
                     data: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 mostrarBannerNotificacao("Pedido realizado com sucesso!");
@@ -1161,9 +1174,8 @@
             }
         }
 
-        // AGORA O CLIENTE APENAS OCULTA O PEDIDO DO HISTÓRICO DELE, SEM APAGAR DO CAIXA DO ADMIN!
+        // Removido o 'confirm()' antigo; agora usa apenas o banner e esconde sem fala indesejada
         async function excluirMeuPedido(id) {
-            if (!confirm("Deseja realmente apagar este pedido do seu histórico?")) return;
             try {
                 await db.collection('pedidos').doc(id).update({
                     visivelParaCliente: false
@@ -1174,8 +1186,8 @@
             }
         }
 
+        // Removido o 'confirm()' antigo do admin
         async function zerarCaixaDiario() {
-            if (!confirm("Tem certeza que deseja zerar o caixa e apagar todos os pedidos concluídos?")) return;
             try {
                 const snapshot = await db.collection('pedidos').where('status', '==', 'Concluído').get();
                 let batch = db.batch();
@@ -1222,9 +1234,9 @@
                         let pedidoAlt = change.doc.data();
                         if (pedidoAlt.clienteEmail === usuarioAtual.email) {
                             if (pedidoAlt.status === 'Em Preparo') {
-                                falarMensagem("Preparando");
+                                falarMensagem("Pedido em preparo");
                             } else if (pedidoAlt.status === 'Saiu para Entrega') {
-                                falarMensagem("Estou indo aí");
+                                falarMensagem("Saindo para a entrega, chego já");
                             } else if (pedidoAlt.status === 'Concluído') {
                                 falarMensagem("Avalie o nosso atendimento");
                             }
@@ -1236,7 +1248,6 @@
 
                 snapshot.forEach(doc => {
                     let pedido = doc.data();
-                    // Só mostra se for do cliente E se a visibilidade estiver ativa (true ou indefinida para antigos)
                     if (pedido.clienteEmail === usuarioAtual.email && pedido.visivelParaCliente !== false) {
                         meusPedidos.push({ id: doc.id, ...pedido });
                         if (pedido.status === 'Concluído' && !pedido.avaliado) {
@@ -1345,7 +1356,10 @@
                     avaliado: true
                 });
 
+                // Fala o agradecimento solicitado pela preferência
+                falarMensagem("Obrigado pela preferência");
                 mostrarBannerNotificacao("Obrigado pela sua avaliação!");
+                
                 document.getElementById('comentario-avaliacao').value = '';
                 pedidoConcluidoNaoAvaliadoId = null;
                 
