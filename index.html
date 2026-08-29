@@ -76,7 +76,7 @@
             display: block;
         }
 
-        /* Menu Superior do Cliente (Cardápio, Meus Pedidos, Carrinho com contador) */
+        /* Menu Superior do Cliente */
         .top-subnav {
             display: flex;
             justify-content: space-between;
@@ -107,7 +107,7 @@
             color: var(--white);
         }
 
-        /* Menu Inferior do Cliente (Cupons e Avaliações) */
+        /* Menu Inferior do Cliente */
         nav {
             position: fixed;
             bottom: 0;
@@ -168,7 +168,6 @@
             margin-bottom: 10px;
         }
 
-        /* Seletor de quantidade no cardápio (+ / -) */
         .seletor-qtd {
             display: flex;
             align-items: center;
@@ -224,7 +223,6 @@
             background: var(--primary-dark);
         }
 
-        /* Banner de Notificação Flutuante no App */
         #notification-banner {
             position: fixed;
             top: 70px;
@@ -242,7 +240,6 @@
             max-width: 90%;
         }
 
-        /* Animação da Moto para Entrega */
         @keyframes andarMoto {
             0% { transform: translateX(0px); }
             50% { transform: translateX(120px); }
@@ -257,13 +254,12 @@
 
         #auth-container {
             max-width: 420px;
-            margin: 40px auto;
+            margin: 20px auto;
         }
     </style>
 </head>
 <body>
 
-    <!-- Alerta de Notificação no topo -->
     <div id="notification-banner">🔔 Novo prato adicionado ao cardápio!</div>
 
     <header>
@@ -272,16 +268,29 @@
     </header>
 
     <main>
-        <!-- ================= TELA DE LOGIN / RECUPERAÇÃO DE SENHA ================= -->
+        <!-- ================= TELA DE LOGIN / CADASTRO ================= -->
         <div id="view-auth" class="view-section active">
             <div id="auth-container" class="card">
-                <h2 style="text-align: center; margin-bottom: 20px;">Entrar no App</h2>
-                <input type="email" id="auth-email" placeholder="Seu e-mail cadastrado">
+                <h2 id="auth-titulo" style="text-align: center; margin-bottom: 15px;">Entrar no App</h2>
+                
+                <!-- Campos visíveis tanto no login quanto no cadastro -->
+                <input type="email" id="auth-email" placeholder="Seu e-mail">
                 <input type="password" id="auth-senha" placeholder="Sua senha">
-                <button class="btn-primary" onclick="fazerLogin()">Entrar</button>
-                <button class="btn-primary" style="background: #747d8c; margin-top: 12px;" onclick="fazerCadastro()">Criar Nova Conta</button>
-                <p style="text-align: center; margin-top: 20px;">
-                    <a href="#" onclick="esqueciSenha()" style="color: var(--primary); text-decoration: none; font-size: 1rem;">Esqueceu a senha? Clique aqui</a>
+
+                <!-- Campos extras exclusivos para Cadastro -->
+                <div id="campos-cadastro" style="display: none;">
+                    <input type="text" id="reg-nome" placeholder="Seu Nome Completo">
+                    <input type="text" id="reg-endereco" placeholder="Endereço (Rua, Número)">
+                    <input type="text" id="reg-bairro" placeholder="Bairro">
+                    <input type="text" id="reg-cidade" placeholder="Cidade">
+                    <input type="text" id="reg-referencia" placeholder="Ponto de Referência (Ex: Próximo à praça)">
+                </div>
+
+                <button id="btn-acao-auth" class="btn-primary" onclick="fazerLogin()">Entrar</button>
+                <button id="btn-alternar-auth" class="btn-primary" style="background: #747d8c; margin-top: 10px;" onclick="alternarTelaCadastro()">Quero me Cadastrar</button>
+                
+                <p id="bloco-esqueci-senha" style="text-align: center; margin-top: 15px;">
+                    <a href="#" onclick="esqueciSenha()" style="color: var(--primary); text-decoration: none; font-size: 0.95rem;">Esqueceu a senha? Clique aqui</a>
                 </p>
             </div>
         </div>
@@ -289,7 +298,6 @@
         <!-- ================= VISÃO DO CLIENTE ================= -->
         <div id="view-cliente" class="view-section">
             
-            <!-- Menu Superior do Cliente (Cardápio, Meus Pedidos, Carrinho com contador) -->
             <div class="top-subnav">
                 <button id="btn-subnav-vitrine" class="active" onclick="mudarAbaCliente('vitrine')">🏠 Cardápio</button>
                 <button id="btn-subnav-pedidos" onclick="mudarAbaCliente('pedidos-cliente')">📦 Meus Pedidos</button>
@@ -327,7 +335,7 @@
                 <button class="btn-primary" onclick="finalizarPedido()">Finalizar Pedido</button>
             </div>
 
-            <!-- Aba Cupons e Promoções (Inferior) -->
+            <!-- Aba Cupons e Promoções -->
             <div id="tab-promocoes" class="cliente-tab" style="display:none;">
                 <h2>Cupons e Promoções</h2>
                 <div id="lista-promocoes-cliente" style="margin-top: 15px;">
@@ -337,20 +345,28 @@
                 </div>
             </div>
 
-            <!-- Aba Avaliação (Inferior) -->
+            <!-- Aba Perfil / Endereço (Editável) -->
             <div id="tab-perfil" class="cliente-tab" style="display:none;">
-                <h2>Avalie o Atendimento</h2>
+                <h2>Meu Perfil e Endereço</h2>
                 <div class="card">
-                    <p>Como foi sua experiência geral?</p>
-                    <select id="nota-avaliacao">
-                        <option value="5">⭐⭐⭐⭐⭐ - Excelente</option>
-                        <option value="4">⭐⭐⭐⭐ - Muito Bom</option>
-                        <option value="3">⭐⭐⭐ - Regular</option>
-                        <option value="2">⭐⭐ - Ruim</option>
-                        <option value="1">⭐ - Péssimo</option>
-                    </select>
-                    <textarea id="comentario-avaliacao" placeholder="Deixe um comentário..."></textarea>
-                    <button class="btn-primary" onclick="enviarAvaliacao()">Enviar Avaliação</button>
+                    <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">Mantenha seus dados atualizados para facilitar a entrega do seu pedido.</p>
+                    
+                    <label style="font-weight: bold; font-size: 0.9rem;">Nome Completo:</label>
+                    <input type="text" id="perfil-nome" placeholder="Seu Nome">
+
+                    <label style="font-weight: bold; font-size: 0.9rem;">Endereço (Rua e Número):</label>
+                    <input type="text" id="perfil-endereco" placeholder="Ex: Rua das Flores, 123">
+
+                    <label style="font-weight: bold; font-size: 0.9rem;">Bairro:</label>
+                    <input type="text" id="perfil-bairro" placeholder="Seu Bairro">
+
+                    <label style="font-weight: bold; font-size: 0.9rem;">Cidade:</label>
+                    <input type="text" id="perfil-cidade" placeholder="Sua Cidade">
+
+                    <label style="font-weight: bold; font-size: 0.9rem;">Ponto de Referência:</label>
+                    <input type="text" id="perfil-referencia" placeholder="Ex: Próximo à farmácia do Zé">
+
+                    <button class="btn-primary" onclick="salvarPerfilCliente()">Salvar Alterações</button>
                 </div>
             </div>
 
@@ -359,7 +375,6 @@
         <!-- ================= VISÃO DO ADMINISTRADOR ================= -->
         <div id="view-admin" class="view-section">
             
-            <!-- Admin: Vitrine / Cadastro -->
             <div id="admin-tab-vitrine" class="admin-tab">
                 <h2>Gerenciar Vitrine</h2>
                 <div class="card">
@@ -381,7 +396,7 @@
                 </div>
             </div>
 
-            <!-- Admin: Pedidos -->
+            <!-- Admin: Pedidos (Agora exibe o endereço completo e referência do cliente) -->
             <div id="admin-tab-pedidos" class="admin-tab" style="display:none;">
                 <h2>Pedidos Recebidos</h2>
                 <div id="lista-pedidos-admin">
@@ -389,7 +404,6 @@
                 </div>
             </div>
 
-            <!-- Admin: Avaliações -->
             <div id="admin-tab-avaliacoes" class="admin-tab" style="display:none;">
                 <h2>Avaliações dos Clientes</h2>
                 <div id="lista-avaliacoes-admin">
@@ -397,7 +411,6 @@
                 </div>
             </div>
 
-            <!-- Admin: Mensagens / Cupons -->
             <div id="admin-tab-mensagens" class="admin-tab" style="display:none;">
                 <h2>Enviar Cupom / Mensagem</h2>
                 <div class="card">
@@ -410,10 +423,10 @@
         </div>
     </main>
 
-    <!-- Menu Inferior do Cliente (Apenas Cupons e Avaliação) -->
+    <!-- Menu Inferior do Cliente -->
     <nav id="nav-cliente" style="display:none;">
-        <button id="nav-btn-promocoes" onclick="mudarAbaCliente('promocoes')" class="active">🎁 Cupons</button>
-        <button id="nav-btn-perfil" onclick="mudarAbaCliente('perfil')">⭐ Avaliar</button>
+        <button id="nav-btn-promocoes" onclick="mudarAbaCliente('promocoes')">🎁 Cupons</button>
+        <button id="nav-btn-perfil" onclick="mudarAbaCliente('perfil')">👤 Meu Perfil</button>
     </nav>
 
     <!-- Menu de Navegação do Administrador -->
@@ -424,18 +437,15 @@
         <button onclick="mudarAbaAdmin('mensagens')">📢 Promoções</button>
     </nav>
 
-    <!-- Scripts do Firebase (SDK Compat) -->
+    <!-- Scripts do Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // Registrar o Service Worker para habilitar a instalação como PWA
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(reg => console.log('Service Worker registrado com sucesso!', reg))
-                    .catch(err => console.log('Erro ao registrar Service Worker:', err));
+                navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW error:', err));
             });
         }
 
@@ -453,11 +463,11 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        const ADMIN_EMAIL = "giliardmartins31@gmail.com"; 
-
+        const ADMIN_EMAIL = "giliardmartins31@gmail.com"
         let usuarioAtual = null;
         let carrinho = [];
         let timerIntervalos = {};
+        let modoCadastroAtivo = false;
 
         auth.onAuthStateChanged((user) => {
             if (user) {
@@ -483,6 +493,7 @@
                     carregarProdutosCliente();
                     carregarPromocoes();
                     carregarPedidosCliente();
+                    carregarPerfilCliente();
                     ouvirNotificacoesNovosPratos();
                 }
             } else {
@@ -497,6 +508,31 @@
             }
         });
 
+        function alternarTelaCadastro() {
+            modoCadastroAtivo = !modoCadastroAtivo;
+            const campos = document.getElementById('campos-cadastro');
+            const titulo = document.getElementById('auth-titulo');
+            const btnAcao = document.getElementById('btn-acao-auth');
+            const btnAlternar = document.getElementById('btn-alternar-auth');
+            const blocoEsqueci = document.getElementById('bloco-esqueci-senha');
+
+            if (modoCadastroAtivo) {
+                campos.style.display = 'block';
+                titulo.innerText = 'Criar Nova Conta';
+                btnAcao.innerText = 'Cadastrar';
+                btnAcao.setAttribute('onclick', 'fazerCadastro()');
+                btnAlternar.innerText = 'Já tenho conta (Entrar)';
+                blocoEsqueci.style.display = 'none';
+            } else {
+                campos.style.display = 'none';
+                titulo.innerText = 'Entrar no App';
+                btnAcao.innerText = 'Entrar';
+                btnAcao.setAttribute('onclick', 'fazerLogin()');
+                btnAlternar.innerText = 'Quero me Cadastrar';
+                blocoEsqueci.style.display = 'block';
+            }
+        }
+
         function fazerLogin() {
             const email = document.getElementById('auth-email').value;
             const senha = document.getElementById('auth-senha').value;
@@ -504,12 +540,36 @@
                 .catch(error => alert("Erro ao entrar: " + error.message));
         }
 
-        function fazerCadastro() {
+        async function fazerCadastro() {
             const email = document.getElementById('auth-email').value;
             const senha = document.getElementById('auth-senha').value;
-            auth.createUserWithEmailAndPassword(email, senha)
-                .then(() => alert("Conta criada com sucesso!"))
-                .catch(error => alert("Erro ao cadastrar: " + error.message));
+            const nome = document.getElementById('reg-nome').value;
+            const endereco = document.getElementById('reg-endereco').value;
+            const bairro = document.getElementById('reg-bairro').value;
+            const cidade = document.getElementById('reg-cidade').value;
+            const referencia = document.getElementById('reg-referencia').value;
+
+            if (!nome || !endereco || !bairro || !cidade) {
+                alert("Por favor, preencha o nome, endereço, bairro e cidade.");
+                return;
+            }
+
+            try {
+                const cred = await auth.createUserWithEmailAndPassword(email, senha);
+                // Salva os dados do perfil no Firestore vinculados ao UID do usuário
+                await db.collection('usuarios').doc(cred.user.uid).set({
+                    nome,
+                    email,
+                    endereco,
+                    bairro,
+                    cidade,
+                    referencia,
+                    atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                alert("Conta criada com sucesso!");
+            } catch (error) {
+                alert("Erro ao cadastrar: " + error.message);
+            }
         }
 
         function fazerLogout() {
@@ -525,6 +585,52 @@
             auth.sendPasswordResetEmail(email)
                 .then(() => alert("E-mail de recuperação enviado!"))
                 .catch(error => alert("Erro: " + error.message));
+        }
+
+        async function carregarPerfilCliente() {
+            if (!usuarioAtual) return;
+            try {
+                const doc = await db.collection('usuarios').doc(usuarioAtual.uid).get();
+                if (doc.exists) {
+                    const dados = doc.data();
+                    document.getElementById('perfil-nome').value = dados.nome || '';
+                    document.getElementById('perfil-endereco').value = dados.endereco || '';
+                    document.getElementById('perfil-bairro').value = dados.bairro || '';
+                    document.getElementById('perfil-cidade').value = dados.cidade || '';
+                    document.getElementById('perfil-referencia').value = dados.referencia || '';
+                }
+            } catch (error) {
+                console.log("Erro ao carregar perfil:", error);
+            }
+        }
+
+        async function salvarPerfilCliente() {
+            if (!usuarioAtual) return;
+            const nome = document.getElementById('perfil-nome').value;
+            const endereco = document.getElementById('perfil-endereco').value;
+            const bairro = document.getElementById('perfil-bairro').value;
+            const cidade = document.getElementById('perfil-cidade').value;
+            const referencia = document.getElementById('perfil-referencia').value;
+
+            if (!nome || !endereco || !bairro || !cidade) {
+                alert("Preencha os campos obrigatórios do perfil.");
+                return;
+            }
+
+            try {
+                await db.collection('usuarios').doc(usuarioAtual.uid).set({
+                    nome,
+                    email: usuarioAtual.email,
+                    endereco,
+                    bairro,
+                    cidade,
+                    referencia,
+                    atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+                alert("Perfil e endereço atualizados com sucesso!");
+            } catch (error) {
+                alert("Erro ao atualizar: " + error.message);
+            }
         }
 
         function mudarAbaCliente(aba) {
@@ -548,7 +654,6 @@
             event.currentTarget.classList.add('active');
         }
 
-        // --- SISTEMA DE NOTIFICAÇÃO DE NOVO PRATO ---
         function ouvirNotificacoesNovosPratos() {
             let primeiraVez = true;
             db.collection('produtos').orderBy('criadoEm', 'desc').limit(1).onSnapshot(snapshot => {
@@ -568,12 +673,9 @@
             const banner = document.getElementById('notification-banner');
             banner.innerText = texto;
             banner.style.display = 'block';
-            setTimeout(() => {
-                banner.style.display = 'none';
-            }, 5000);
+            setTimeout(() => { banner.style.display = 'none'; }, 5000);
         }
 
-        // --- PRODUTOS ---
         async function cadastrarProduto() {
             const nome = document.getElementById('adm-nome-produto').value;
             const preco = parseFloat(document.getElementById('adm-preco-produto').value);
@@ -590,7 +692,7 @@
                     nome, preco, fotoUrl, status,
                     criadoEm: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                alert("Produto cadastrado com sucesso! Notificação disparada para os clientes.");
+                alert("Produto cadastrado com sucesso!");
                 document.getElementById('adm-nome-produto').value = '';
                 document.getElementById('adm-preco-produto').value = '';
                 document.getElementById('adm-foto-produto').value = '';
@@ -618,7 +720,6 @@
                 snapshot.forEach(doc => {
                     const p = doc.data();
                     const indisponivel = p.status === 'indisponivel';
-                    
                     let itemNoCarrinho = carrinho.find(i => i.name === p.nome);
                     let quantidadeAtual = itemNoCarrinho ? itemNoCarrinho.quantidade : 0;
 
@@ -666,7 +767,6 @@
             });
         }
 
-        // --- CARRINHO E PEDIDOS ---
         function alterarQtdProduto(nome, preco, delta) {
             let item = carrinho.find(i => i.name === nome);
             if (item) {
@@ -681,18 +781,15 @@
             }
 
             let spanQtd = document.getElementById('qtd-' + nome.replace(/\s+/g, '-'));
-            if (spanQtd) {
-                spanQtd.innerText = item ? item.quantidade : 0;
-            }
-
+            if (spanQtd) spanQtd.innerText = item ? item.quantidade : 0;
             atualizarVisualCarrinho();
         }
 
         function atualizarVisualCarrinho() {
             const container = document.getElementById('itens-carrinho');
             const contadorTopo = document.getElementById('contador-carrinho-topo');
-            
             let totalItens = carrinho.reduce((sum, i) => sum + i.quantidade, 0);
+
             if (totalItens > 0) {
                 contadorTopo.innerText = totalItens;
                 contadorTopo.style.display = 'inline-block';
@@ -723,12 +820,10 @@
         function removerCarrinhoTotal(index) {
             let itemRemovido = carrinho[index];
             carrinho.splice(index, 1);
-            
             if (itemRemovido) {
                 let spanQtd = document.getElementById('qtd-' + itemRemovido.name.replace(/\s+/g, '-'));
                 if (spanQtd) spanQtd.innerText = 0;
             }
-
             atualizarVisualCarrinho();
         }
 
@@ -737,10 +832,25 @@
                 alert("Carrinho vazio!");
                 return;
             }
+            
+            // Busca o endereço mais atualizado do perfil do cliente antes de enviar o pedido
+            let dadosCliente = { clienteEmail: usuarioAtual.email, nome: "Cliente", endereco: "Não informado", bairro: "", cidade: "", referencia: "" };
+            try {
+                const userDoc = await db.collection('usuarios').doc(usuarioAtual.uid).get();
+                if (userDoc.exists) {
+                    dadosCliente = { ...dadosCliente, ...userDoc.data() };
+                }
+            } catch (e) {
+                console.log("Erro ao buscar perfil para o pedido");
+            }
+
             const pagamento = document.getElementById('forma-pagamento').value;
             try {
                 await db.collection('pedidos').add({
-                    clienteEmail: usuarioAtual ? usuarioAtual.email : "Anônimo",
+                    clienteEmail: usuarioAtual.email,
+                    clienteNome: dadosCliente.nome,
+                    enderecoEntrega: `${dadosCliente.endereco}, Bairro: ${dadosCliente.bairro}, Cidade: ${dadosCliente.cidade}`,
+                    referencia: dadosCliente.referencia || 'Nenhuma',
                     itens: carrinho,
                     pagamento,
                     status: "Aguardando Preparo",
@@ -770,8 +880,12 @@
                     const id = doc.id;
                     let itensHtml = p.itens ? p.itens.map(i => `${i.name} (x${i.quantidade})`).join(', ') : '';
                     container.innerHTML += `
-                        <div class="card">
-                            <p><strong>Cliente:</strong> ${p.clienteEmail}</p>
+                        <div class="card" style="border-left: 5px solid var(--primary);">
+                            <p><strong>Cliente:</strong> ${p.clienteNome || 'Anônimo'} (${p.clienteEmail})</p>
+                            <p style="background: #f8f9fa; padding: 8px; border-radius: 6px; margin: 6px 0;">
+                                📍 <strong>Endereço:</strong> ${p.enderecoEntrega || 'Não informado'}<br>
+                                🗺️ <strong>Referência:</strong> ${p.referencia || 'Nenhuma'}
+                            </p>
                             <p><strong>Itens:</strong> ${itensHtml}</p>
                             <p><strong>Pagamento:</strong> ${(p.pagamento || '').toUpperCase()}</p>
                             <p><strong>Status Atual:</strong> <span style="color: #ff4757; font-weight: bold;">${p.status}</span></p>
@@ -834,42 +948,30 @@
                     let statusHtml = '';
 
                     if (pedido.status === 'Concluído') {
-                        statusHtml = `
-                            <div style="background:#e3f2fd; padding: 12px; border-radius: 8px; text-align:center; margin-top: 10px;">
-                                <p>🎉 <strong>Pedido Concluído!</strong></p>
-                                <button class="btn-primary" onclick="mudarAbaCliente('perfil')">Avaliar Atendimento Agora ⭐</button>
-                            </div>
-                        `;
+                        statusHtml = `<div style="background:#e3f2fd; padding: 10px; border-radius: 8px; text-align:center; margin-top: 10px;"><p>🎉 <strong>Pedido Concluído!</strong></p></div>`;
                     } else if (pedido.status === 'Saiu para Entrega') {
                         statusHtml = `
-                            <div style="background:#e8f8f5; border-left: 5px solid #2ed573; padding: 12px; border-radius: 8px; text-align:center; margin-top: 10px;">
+                            <div style="background:#e8f8f5; border-left: 5px solid #2ed573; padding: 10px; border-radius: 8px; text-align:center; margin-top: 10px;">
                                 <p><strong>Status:</strong> <span style="color:#2ed573; font-weight:bold;">Saiu para Entrega! 🛵</span></p>
-                                <div style="margin: 15px 0; overflow: hidden;">
-                                    <span class="animacao-entrega">🛵💨 🏠</span>
-                                </div>
-                                <p style="font-size: 0.9rem; color: #555;">O motoboy está a caminho do seu endereço!</p>
+                                <div style="margin: 10px 0; overflow: hidden;"><span class="animacao-entrega">🛵💨 🏠</span></div>
                             </div>
                         `;
                     } else if (pedido.status === 'Em Preparo') {
                         statusHtml = `
-                            <div style="background:#fff3cd; border-left: 5px solid #ffc107; padding: 12px; border-radius: 8px; margin-top: 10px;">
+                            <div style="background:#fff3cd; border-left: 5px solid #ffc107; padding: 10px; border-radius: 8px; margin-top: 10px;">
                                 <p><strong>Status:</strong> <span style="color:#856404; font-weight:bold;">Em Preparo 👨‍🍳</span></p>
-                                <p style="margin-top:8px; font-size: 1rem;">⏳ Tempo estimado: <strong id="cronometro-${id}" style="color: #ff4757;">Calculando...</strong></p>
+                                <p style="margin-top:5px;">⏳ Tempo estimado: <strong id="cronometro-${id}" style="color: #ff4757;">Calculando...</strong></p>
                             </div>
                         `;
                         iniciarCronometroEspecifico(id, pedido.tempoMinutos || 15);
                     } else {
-                        statusHtml = `
-                            <div style="background:#f1f2f6; border-left: 5px solid #747d8c; padding: 12px; border-radius: 8px; margin-top: 10px;">
-                                <p><strong>Status:</strong> <span style="color:#747d8c; font-weight:bold;">${pedido.status}</span></p>
-                            </div>
-                        `;
+                        statusHtml = `<div style="background:#f1f2f6; padding: 10px; border-radius: 8px; margin-top: 10px;"><p><strong>Status:</strong> ${pedido.status}</p></div>`;
                     }
 
                     container.innerHTML += `
                         <div class="card">
                             <p><strong>Itens:</strong> ${itensHtml}</p>
-                            <p><strong>Forma de Pagamento:</strong> ${(pedido.pagamento || '').toUpperCase()}</p>
+                            <p><strong>Pagamento:</strong> ${(pedido.pagamento || '').toUpperCase()}</p>
                             ${statusHtml}
                         </div>
                     `;
@@ -879,20 +981,17 @@
 
         function iniciarCronometroEspecifico(id, minutos) {
             let tempoRestante = minutos * 60;
-
             timerIntervalos[id] = setInterval(() => {
                 let elemento = document.getElementById('cronometro-' + id);
                 if (!elemento) {
                     clearInterval(timerIntervalos[id]);
                     return;
                 }
-
                 if (tempoRestante <= 0) {
-                    elemento.innerText = "Quase pronto / A qualquer momento!";
+                    elemento.innerText = "Quase pronto!";
                     clearInterval(timerIntervalos[id]);
                     return;
                 }
-
                 let m = Math.floor(tempoRestante / 60);
                 let s = tempoRestante % 60;
                 elemento.innerText = `${m}m ${s < 10 ? '0' : ''}${s}s`;
@@ -900,22 +999,8 @@
             }, 1000);
         }
 
-        // --- AVALIAÇÕES E PROMOÇÕES ---
         async function enviarAvaliacao() {
-            const nota = document.getElementById('nota-avaliacao').value;
-            const comentario = document.getElementById('comentario-avaliacao').value;
-            try {
-                await db.collection('avaliacoes').add({
-                    email: usuarioAtual ? usuarioAtual.email : "Anônimo",
-                    nota,
-                    comentario,
-                    data: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                alert("Obrigado pela sua avaliação!");
-                document.getElementById('comentario-avaliacao').value = '';
-            } catch (error) {
-                alert("Erro: " + error.message);
-            }
+            // Caso queira manter alguma lógica complementar
         }
 
         function carregarAvaliacoesAdmin() {
@@ -932,7 +1017,7 @@
                     container.innerHTML += `
                         <div class="card">
                             <p><strong>Cliente:</strong> ${av.email}</p>
-                            <p><strong>Nota:</strong> ${estrelas} (${av.nota}/5)</p>
+                            <p><strong>Nota:</strong> ${estrelas}</p>
                             <p><strong>Comentário:</strong> "${av.comentario || 'Sem comentário'}"</p>
                         </div>
                     `;
