@@ -680,9 +680,11 @@
                     tempoMinutos: 0,
                     data: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                alert("Pedido realizado com sucesso! Acompanhe na aba 'Meus Pedidos'.");
+                alert("Pedido realizado com sucesso!");
                 carrinho = [];
                 atualizarVisualCarrinho();
+                
+                // Manda o cliente direto para a aba "Meus Pedidos" para ver a tela animada/status em tempo real
                 mudarAbaCliente('pedidos-cliente');
             } catch (error) {
                 alert("Erro ao enviar pedido: " + error.message);
