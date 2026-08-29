@@ -1,8 +1,11 @@
-self.addEventListener('install', (e) => {
-  console.log('[Service Worker] Instalado');
+self.addEventListener('install', (event) => {
+    self.skipWaiting();
 });
 
-self.addEventListener('fetch', (e) => {
-  // Necessário para atender aos critérios de PWA do navegador
-  e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+self.addEventListener('activate', (event) => {
+    return self.clients.claim();
+});
+
+self.fetch('fetch', (event) => {
+    // Apenas para manter o service worker ativo
 });
