@@ -326,10 +326,25 @@
                     <p>Seu carrinho está vazio.</p>
                 </div>
                 <h3>Forma de Pagamento</h3>
-                <select id="forma-pagamento">
+                <select id="forma-pagamento" onchange="verificarTroco(this.value)">
                     <option value="pix">Pix (Manual)</option>
                     <option value="dinheiro">Dinheiro</option>
                 </select>
+
+                <!-- Bloco dinâmico de troco -->
+                <div id="bloco-troco" class="card" style="display:none; background: #fff3cd; border-left: 5px solid #ffc107; margin-top: 10px;">
+                    <label style="font-weight: bold; font-size: 0.95rem;">Vai precisar de troco?</label>
+                    <select id="precisa-troco" onchange="alternarCampoTroco(this.value)">
+                        <option value="nao">Não, troco exato</option>
+                        <option value="sim">Sim, preciso de troco</option>
+                    </select>
+
+                    <div id="campo-valor-troco" style="display:none; margin-top: 10px;">
+                        <label style="font-weight: bold; font-size: 0.9rem;">Troco para quanto? (Ex: 50.00)</label>
+                        <input type="number" id="troco-para" placeholder="Valor em dinheiro que vai pagar" step="0.01">
+                    </div>
+                </div>
+
                 <button class="btn-primary" onclick="finalizarPedido()">Finalizar Pedido</button>
             </div>
 
@@ -390,10 +405,10 @@
         <!-- ================= VISÃO DO ADMINISTRADOR ================= -->
         <div id="view-admin" class="view-section">
             
-            <!-- Menu Superior do Admin (Vitrine, Pedidos e Caixa) -->
+            <!-- Menu Superior do Admin -->
             <div class="top-subnav">
                 <button id="btn-admin-sub-vitrine" class="active" onclick="mudarAbaAdminSuperior('vitrine')">🍔 Vitrine</button>
-                <button id="btn-admin-sub-pedidos" onclick="mudarAbaAdminSuperior('pedidos')">📦 Pedidos</button>
+                <button id="btn-admin-sub-pedidos" onclick="mudarAbaAdminSuperior('pedidos')">📦 Pedidos Ativos</button>
                 <button id="btn-admin-sub-caixa" onclick="mudarAbaAdminSuperior('caixa')">💰 Caixa</button>
             </div>
 
@@ -420,7 +435,7 @@
 
             <!-- Admin: Pedidos Ativos -->
             <div id="admin-tab-pedidos" class="admin-tab" style="display:none;">
-                <h2>Pedidos Ativos</h2>
+                <h2>Pedidos em Curso</h2>
                 <div id="lista-pedidos-admin">
                     <p style="text-align:center;">Nenhum pedido no momento.</p>
                 </div>
@@ -467,7 +482,7 @@
         <button id="nav-btn-perfil-avaliacao" onclick="mudarAbaCliente('perfil-avaliacao')" style="display:none;">⭐ Avaliar</button>
     </nav>
 
-    <!-- Menu Inferior do Administrador (Avaliações e Promoções) -->
+    <!-- Menu Inferior do Administrador -->
     <nav id="nav-admin" style="display:none;">
         <button id="nav-btn-admin-avaliacoes" onclick="mudarAbaAdminInferior('avaliacoes')">⭐ Avaliações</button>
         <button id="nav-btn-admin-mensagens" onclick="mudarAbaAdminInferior('mensagens')">📢 Promoções</button>
@@ -685,7 +700,6 @@
             }
         }
 
-        // Navegação Superior do Admin
         function mudarAbaAdminSuperior(aba) {
             document.getElementById('admin-tab-vitrine').style.display = 'none';
             document.getElementById('admin-tab-pedidos').style.display = 'none';
@@ -711,7 +725,6 @@
             }
         }
 
-        // Navegação Inferior do Admin
         function mudarAbaAdminInferior(aba) {
             document.getElementById('admin-tab-vitrine').style.display = 'none';
             document.getElementById('admin-tab-pedidos').style.display = 'none';
@@ -731,6 +744,26 @@
             } else if (aba === 'mensagens') {
                 document.getElementById('admin-tab-mensagens').style.display = 'block';
                 document.getElementById('nav-btn-admin-mensagens').classList.add('active');
+            }
+        }
+
+        function verificarTroco(forma) {
+            const blocoTroco = document.getElementById('bloco-troco');
+            if (forma === 'dinheiro') {
+                blocoTroco.style.display = 'block';
+            } else {
+                blocoTroco.style.display = 'none';
+                document.getElementById('precisa-troco').value = 'nao';
+                document.getElementById('campo-valor-troco').style.display = 'none';
+            }
+        }
+
+        function alternarCampoTroco(resp) {
+            const campoValor = document.getElementById('campo-valor-troco');
+            if (resp === 'sim') {
+                campoValor.style.display = 'block';
+            } else {
+                campoValor.style.display = 'none';
             }
         }
 
@@ -917,8 +950,22 @@
             }
 
             const pagamento = document.getElementById('forma-pagamento').value;
-            
-            // Calcula o valor total do pedido para salvar no banco
+            let infoTroco = "Não aplicável";
+
+            if (pagamento === 'dinheiro') {
+                const precisa = document.getElementById('precisa-troco').value;
+                if (precisa === 'sim') {
+                    const valorTroco = document.getElementById('troco-para').value;
+                    if (!valorTroco) {
+                        mostrarBannerNotificacao("Informe o valor para o troco.", "#ff4757");
+                        return;
+                    }
+                    infoTroco = `Precisa de troco para R$ ${parseFloat(valorTroco).toFixed(2)}`;
+                } else {
+                    infoTroco = "Dinheiro trocado / Sem troco";
+                }
+            }
+
             let valorTotalPedido = carrinho.reduce((sum, i) => sum + (i.price * i.quantidade), 0);
 
             try {
@@ -928,7 +975,8 @@
                     enderecoEntrega: `${dadosCliente.endereco}, Bairro: ${dadosCliente.bairro}, Cidade: ${dadosCliente.cidade}`,
                     referencia: dadosCliente.referencia || 'Nenhuma',
                     itens: carrinho,
-                    pagamento,
+                    pagamento: pagamento.toUpperCase(),
+                    detalheTroco: infoTroco,
                     valorTotal: valorTotalPedido,
                     status: "Aguardando Preparo",
                     tempoMinutos: 0,
@@ -953,7 +1001,7 @@
                     const p = doc.data();
                     const id = doc.id;
                     
-                    // Exibe apenas pedidos que NÃO estão concluídos na aba de ativos
+                    // Exibe na aba de ativos APENAS se NÃO estiver concluído
                     if (p.status !== 'Concluído') {
                         temAtivos = true;
                         let itensHtml = p.itens ? p.itens.map(i => `${i.name} (x${i.quantidade})`).join(', ') : '';
@@ -965,7 +1013,8 @@
                                     🗺️ <strong>Referência:</strong> ${p.referencia || 'Nenhuma'}
                                 </p>
                                 <p><strong>Itens:</strong> ${itensHtml}</p>
-                                <p><strong>Pagamento:</strong> ${(p.pagamento || '').toUpperCase()} | <strong style="color:var(--success);">R$ ${(p.valorTotal || 0).toFixed(2)}</strong></p>
+                                <p><strong>Pagamento:</strong> ${p.pagamento || ''} | <strong style="color:var(--success);">R$ ${(p.valorTotal || 0).toFixed(2)}</strong></p>
+                                <p><strong>Troco:</strong> ${p.detalheTroco || 'Não informado'}</p>
                                 <p><strong>Status Atual:</strong> <span style="color: #ff4757; font-weight: bold;">${p.status}</span></p>
                                 
                                 <div style="margin-top: 12px; border-top: 1px solid #eee; padding-top: 10px;">
@@ -979,12 +1028,11 @@
                     }
                 });
                 if (!temAtivos) {
-                    container.innerHTML = `<p style="text-align:center;">Nenhum pedido ativo no momento.</p>`;
+                    container.innerHTML = `<p style="text-align:center;">Nenhum pedido em curso no momento.</p>`;
                 }
             });
         }
 
-        // Carrega os pedidos concluídos na aba de Caixa e faz a soma
         function carregarCaixaAdmin() {
             const container = document.getElementById('lista-pedidos-caixa');
             const elementoTotal = document.getElementById('valor-total-caixa');
@@ -1007,7 +1055,8 @@
                             <div class="card" style="border-left: 5px solid #2ed573;">
                                 <p><strong>Cliente:</strong> ${p.clienteNome || 'Anônimo'}</p>
                                 <p><strong>Itens:</strong> ${itensHtml}</p>
-                                <p><strong>Valor:</strong> <span style="color:var(--success); font-weight:bold;">R$ ${(p.valorTotal || 0).toFixed(2)}</span> (${(p.pagamento || '').toUpperCase()})</p>
+                                <p><strong>Valor:</strong> <span style="color:var(--success); font-weight:bold;">R$ ${(p.valorTotal || 0).toFixed(2)}</span> (${p.pagamento || ''})</p>
+                                <p><strong>Troco:</strong> ${p.detalheTroco || 'N/A'}</p>
                                 <button class="btn-primary" style="background: #ff4757; font-size: 0.85rem; padding: 8px; margin-top: 10px;" onclick="excluirPedidoCaixa('${id}')">🗑️ Apagar este registro</button>
                             </div>
                         `;
@@ -1130,7 +1179,7 @@
                     container.innerHTML += `
                         <div class="card">
                             <p><strong>Itens:</strong> ${itensHtml}</p>
-                            <p><strong>Pagamento:</strong> ${(pedido.pagamento || '').toUpperCase()}</p>
+                            <p><strong>Pagamento:</strong> ${pedido.pagamento || ''}</p>
                             ${statusHtml}
                         </div>
                     `;
