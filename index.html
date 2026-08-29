@@ -368,7 +368,7 @@
                 </div>
             </div>
 
-            <!-- Aba Avaliação (Aparece apenas se tiver pedido concluído e não avaliado) -->
+            <!-- Aba Avaliação -->
             <div id="tab-perfil-avaliacao" class="cliente-tab" style="display:none;">
                 <h2>Avalie o Atendimento</h2>
                 <div class="card">
@@ -390,10 +390,11 @@
         <!-- ================= VISÃO DO ADMINISTRADOR ================= -->
         <div id="view-admin" class="view-section">
             
-            <!-- Menu Superior do Admin (Vitrine e Pedidos) -->
+            <!-- Menu Superior do Admin (Vitrine, Pedidos e Caixa) -->
             <div class="top-subnav">
                 <button id="btn-admin-sub-vitrine" class="active" onclick="mudarAbaAdminSuperior('vitrine')">🍔 Vitrine</button>
                 <button id="btn-admin-sub-pedidos" onclick="mudarAbaAdminSuperior('pedidos')">📦 Pedidos</button>
+                <button id="btn-admin-sub-caixa" onclick="mudarAbaAdminSuperior('caixa')">💰 Caixa</button>
             </div>
 
             <!-- Admin: Vitrine -->
@@ -417,11 +418,24 @@
                 </div>
             </div>
 
-            <!-- Admin: Pedidos -->
+            <!-- Admin: Pedidos Ativos -->
             <div id="admin-tab-pedidos" class="admin-tab" style="display:none;">
-                <h2>Pedidos Recebidos</h2>
+                <h2>Pedidos Ativos</h2>
                 <div id="lista-pedidos-admin">
                     <p style="text-align:center;">Nenhum pedido no momento.</p>
+                </div>
+            </div>
+
+            <!-- Admin: Caixa / Pedidos Concluídos -->
+            <div id="admin-tab-caixa" class="admin-tab" style="display:none;">
+                <h2>Controle de Caixa (Concluídos)</h2>
+                <div class="card" style="background: #e8f8f5; border-left: 5px solid #2ed573;">
+                    <h3 style="color: #2f3542;">Total Lucrado Hoje:</h3>
+                    <p id="valor-total-caixa" style="font-size: 1.8rem; font-weight: bold; color: #2ed573; margin: 5px 0;">R$ 0,00</p>
+                    <button class="btn-primary" style="background: #ff4757; margin-top: 10px;" onclick="zerarCaixaDiario()">🗑️ Zerar / Limpar Caixa do Dia</button>
+                </div>
+                <div id="lista-pedidos-caixa" style="margin-top: 15px;">
+                    <p style="text-align:center;">Nenhum pedido concluído no caixa.</p>
                 </div>
             </div>
 
@@ -509,6 +523,7 @@
                     carregarProdutosAdmin();
                     carregarAvaliacoesAdmin();
                     carregarPedidosAdmin();
+                    carregarCaixaAdmin();
                 } else {
                     document.getElementById('view-cliente').classList.add('active');
                     document.getElementById('view-admin').classList.remove('active');
@@ -674,11 +689,13 @@
         function mudarAbaAdminSuperior(aba) {
             document.getElementById('admin-tab-vitrine').style.display = 'none';
             document.getElementById('admin-tab-pedidos').style.display = 'none';
+            document.getElementById('admin-tab-caixa').style.display = 'none';
             document.getElementById('admin-tab-avaliacoes').style.display = 'none';
             document.getElementById('admin-tab-mensagens').style.display = 'none';
 
             document.getElementById('btn-admin-sub-vitrine').classList.remove('active');
             document.getElementById('btn-admin-sub-pedidos').classList.remove('active');
+            document.getElementById('btn-admin-sub-caixa').classList.remove('active');
             document.getElementById('nav-btn-admin-avaliacoes').classList.remove('active');
             document.getElementById('nav-btn-admin-mensagens').classList.remove('active');
 
@@ -688,6 +705,9 @@
             } else if (aba === 'pedidos') {
                 document.getElementById('admin-tab-pedidos').style.display = 'block';
                 document.getElementById('btn-admin-sub-pedidos').classList.add('active');
+            } else if (aba === 'caixa') {
+                document.getElementById('admin-tab-caixa').style.display = 'block';
+                document.getElementById('btn-admin-sub-caixa').classList.add('active');
             }
         }
 
@@ -695,11 +715,13 @@
         function mudarAbaAdminInferior(aba) {
             document.getElementById('admin-tab-vitrine').style.display = 'none';
             document.getElementById('admin-tab-pedidos').style.display = 'none';
+            document.getElementById('admin-tab-caixa').style.display = 'none';
             document.getElementById('admin-tab-avaliacoes').style.display = 'none';
             document.getElementById('admin-tab-mensagens').style.display = 'none';
 
             document.getElementById('btn-admin-sub-vitrine').classList.remove('active');
             document.getElementById('btn-admin-sub-pedidos').classList.remove('active');
+            document.getElementById('btn-admin-sub-caixa').classList.remove('active');
             document.getElementById('nav-btn-admin-avaliacoes').classList.remove('active');
             document.getElementById('nav-btn-admin-mensagens').classList.remove('active');
 
@@ -895,6 +917,10 @@
             }
 
             const pagamento = document.getElementById('forma-pagamento').value;
+            
+            // Calcula o valor total do pedido para salvar no banco
+            let valorTotalPedido = carrinho.reduce((sum, i) => sum + (i.price * i.quantidade), 0);
+
             try {
                 await db.collection('pedidos').add({
                     clienteEmail: usuarioAtual.email,
@@ -903,6 +929,7 @@
                     referencia: dadosCliente.referencia || 'Nenhuma',
                     itens: carrinho,
                     pagamento,
+                    valorTotal: valorTotalPedido,
                     status: "Aguardando Preparo",
                     tempoMinutos: 0,
                     data: firebase.firestore.FieldValue.serverTimestamp()
@@ -921,35 +948,102 @@
             const container = document.getElementById('lista-pedidos-admin');
             db.collection('pedidos').orderBy('data', 'desc').onSnapshot(snapshot => {
                 container.innerHTML = '';
-                if (snapshot.empty) {
-                    container.innerHTML = `<p style="text-align:center;">Nenhum pedido no momento.</p>`;
-                    return;
-                }
+                let temAtivos = false;
                 snapshot.forEach(doc => {
                     const p = doc.data();
                     const id = doc.id;
-                    let itensHtml = p.itens ? p.itens.map(i => `${i.name} (x${i.quantidade})`).join(', ') : '';
-                    container.innerHTML += `
-                        <div class="card" style="border-left: 5px solid var(--primary);">
-                            <p><strong>Cliente:</strong> ${p.clienteNome || 'Anônimo'} (${p.clienteEmail})</p>
-                            <p style="background: #f8f9fa; padding: 8px; border-radius: 6px; margin: 6px 0;">
-                                📍 <strong>Endereço:</strong> ${p.enderecoEntrega || 'Não informado'}<br>
-                                🗺️ <strong>Referência:</strong> ${p.referencia || 'Nenhuma'}
-                            </p>
-                            <p><strong>Itens:</strong> ${itensHtml}</p>
-                            <p><strong>Pagamento:</strong> ${(p.pagamento || '').toUpperCase()}</p>
-                            <p><strong>Status Atual:</strong> <span style="color: #ff4757; font-weight: bold;">${p.status}</span></p>
-                            
-                            <div style="margin-top: 12px; border-top: 1px solid #eee; padding-top: 10px;">
-                                <input type="number" id="tempo-${id}" placeholder="Minutos para entrega" style="margin-bottom: 5px;" value="${p.tempoMinutos || 15}">
-                                <button class="btn-primary" style="background:#ffa502; margin-bottom: 5px;" onclick="atualizarStatusPedido('${id}', 'Em Preparo')">👨‍🍳 Em Preparo (Definir Tempo)</button>
-                                <button class="btn-primary" style="background:#2ed573; margin-bottom: 5px;" onclick="atualizarStatusPedido('${id}', 'Saiu para Entrega')">🛵 Saiu para Entrega</button>
-                                <button class="btn-primary" style="background:#3742fa;" onclick="atualizarStatusPedido('${id}', 'Concluído')">✅ Concluído</button>
+                    
+                    // Exibe apenas pedidos que NÃO estão concluídos na aba de ativos
+                    if (p.status !== 'Concluído') {
+                        temAtivos = true;
+                        let itensHtml = p.itens ? p.itens.map(i => `${i.name} (x${i.quantidade})`).join(', ') : '';
+                        container.innerHTML += `
+                            <div class="card" style="border-left: 5px solid var(--primary);">
+                                <p><strong>Cliente:</strong> ${p.clienteNome || 'Anônimo'} (${p.clienteEmail})</p>
+                                <p style="background: #f8f9fa; padding: 8px; border-radius: 6px; margin: 6px 0;">
+                                    📍 <strong>Endereço:</strong> ${p.enderecoEntrega || 'Não informado'}<br>
+                                    🗺️ <strong>Referência:</strong> ${p.referencia || 'Nenhuma'}
+                                </p>
+                                <p><strong>Itens:</strong> ${itensHtml}</p>
+                                <p><strong>Pagamento:</strong> ${(p.pagamento || '').toUpperCase()} | <strong style="color:var(--success);">R$ ${(p.valorTotal || 0).toFixed(2)}</strong></p>
+                                <p><strong>Status Atual:</strong> <span style="color: #ff4757; font-weight: bold;">${p.status}</span></p>
+                                
+                                <div style="margin-top: 12px; border-top: 1px solid #eee; padding-top: 10px;">
+                                    <input type="number" id="tempo-${id}" placeholder="Minutos para entrega" style="margin-bottom: 5px;" value="${p.tempoMinutos || 15}">
+                                    <button class="btn-primary" style="background:#ffa502; margin-bottom: 5px;" onclick="atualizarStatusPedido('${id}', 'Em Preparo')">👨‍🍳 Em Preparo (Definir Tempo)</button>
+                                    <button class="btn-primary" style="background:#2ed573; margin-bottom: 5px;" onclick="atualizarStatusPedido('${id}', 'Saiu para Entrega')">🛵 Saiu para Entrega</button>
+                                    <button class="btn-primary" style="background:#3742fa;" onclick="atualizarStatusPedido('${id}', 'Concluído')">✅ Concluído (Enviar para o Caixa)</button>
+                                </div>
                             </div>
-                        </div>
-                    `;
+                        `;
+                    }
                 });
+                if (!temAtivos) {
+                    container.innerHTML = `<p style="text-align:center;">Nenhum pedido ativo no momento.</p>`;
+                }
             });
+        }
+
+        // Carrega os pedidos concluídos na aba de Caixa e faz a soma
+        function carregarCaixaAdmin() {
+            const container = document.getElementById('lista-pedidos-caixa');
+            const elementoTotal = document.getElementById('valor-total-caixa');
+
+            db.collection('pedidos').orderBy('data', 'desc').onSnapshot(snapshot => {
+                container.innerHTML = '';
+                let faturamentoTotal = 0;
+                let quantidadeConcluidos = 0;
+
+                snapshot.forEach(doc => {
+                    const p = doc.data();
+                    const id = doc.id;
+
+                    if (p.status === 'Concluído') {
+                        quantidadeConcluidos++;
+                        faturamentoTotal += (p.valorTotal || 0);
+                        let itensHtml = p.itens ? p.itens.map(i => `${i.name} (x${i.quantidade})`).join(', ') : '';
+
+                        container.innerHTML += `
+                            <div class="card" style="border-left: 5px solid #2ed573;">
+                                <p><strong>Cliente:</strong> ${p.clienteNome || 'Anônimo'}</p>
+                                <p><strong>Itens:</strong> ${itensHtml}</p>
+                                <p><strong>Valor:</strong> <span style="color:var(--success); font-weight:bold;">R$ ${(p.valorTotal || 0).toFixed(2)}</span> (${(p.pagamento || '').toUpperCase()})</p>
+                                <button class="btn-primary" style="background: #ff4757; font-size: 0.85rem; padding: 8px; margin-top: 10px;" onclick="excluirPedidoCaixa('${id}')">🗑️ Apagar este registro</button>
+                            </div>
+                        `;
+                    }
+                });
+
+                elementoTotal.innerText = `R$ ${faturamentoTotal.toFixed(2)}`;
+
+                if (quantidadeConcluidos === 0) {
+                    container.innerHTML = `<p style="text-align:center;">Nenhum pedido concluído registrado hoje.</p>`;
+                }
+            });
+        }
+
+        async function excluirPedidoCaixa(id) {
+            try {
+                await db.collection('pedidos').doc(id).delete();
+                mostrarBannerNotificacao("Registro apagado do caixa.");
+            } catch (error) {
+                mostrarBannerNotificacao("Erro ao apagar pedido", "#ff4757");
+            }
+        }
+
+        async function zerarCaixaDiario() {
+            if (!confirm("Tem certeza que deseja zerar o caixa e apagar todos os pedidos concluídos?")) return;
+            try {
+                const snapshot = await db.collection('pedidos').where('status', '==', 'Concluído').get();
+                let batch = db.batch();
+                snapshot.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+                await batch.commit();
+                mostrarBannerNotificacao("Caixa zerado para um novo dia!");
+            } catch (error) {
+                mostrarBannerNotificacao("Erro ao zerar caixa", "#ff4757");
+            }
         }
 
         async function atualizarStatusPedido(id, novoStatus) {
@@ -982,7 +1076,6 @@
                     let pedido = doc.data();
                     if (pedido.clienteEmail === usuarioAtual.email) {
                         meusPedidos.push({ id: doc.id, ...pedido });
-                        // Verifica se tem pedido concluído que ainda não foi avaliado
                         if (pedido.status === 'Concluído' && !pedido.avaliado) {
                             temConcluidoNaoAvaliado = true;
                             pedidoConcluidoNaoAvaliadoId = doc.id;
@@ -990,13 +1083,11 @@
                     }
                 });
 
-                // Mostra ou esconde a aba de avaliação do menu inferior do cliente
                 const btnNavAvaliar = document.getElementById('nav-btn-perfil-avaliacao');
                 if (temConcluidoNaoAvaliado) {
                     btnNavAvaliar.style.display = 'flex';
                 } else {
                     btnNavAvaliar.style.display = 'none';
-                    // Se a aba atual for a de avaliação e sumiu, volta para a vitrine
                     if (document.getElementById('tab-perfil-avaliacao').style.display === 'block') {
                         mudarAbaCliente('vitrine');
                     }
@@ -1077,7 +1168,6 @@
             const comentario = document.getElementById('comentario-avaliacao').value;
             
             try {
-                // Salva a avaliação
                 await db.collection('avaliacoes').add({
                     email: usuarioAtual.email,
                     nota,
@@ -1085,7 +1175,6 @@
                     data: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                // Marca o pedido como avaliado para sumir a aba
                 await db.collection('pedidos').doc(pedidoConcluidoNaoAvaliadoId).update({
                     avaliado: true
                 });
@@ -1094,7 +1183,6 @@
                 document.getElementById('comentario-avaliacao').value = '';
                 pedidoConcluidoNaoAvaliadoId = null;
                 
-                // Esconde a aba e volta para a vitrine
                 document.getElementById('nav-btn-perfil-avaliacao').style.display = 'none';
                 mudarAbaCliente('vitrine');
 
