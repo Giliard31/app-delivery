@@ -19,6 +19,7 @@
             --text: #2f3542;
             --white: #ffffff;
             --gray: #ced6e0;
+            --success: #2ed573;
         }
 
         * {
@@ -120,6 +121,11 @@
             margin-bottom: 15px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             text-align: center;
+            transition: opacity 0.3s;
+        }
+
+        .produto-card.indisponivel {
+            opacity: 0.4;
         }
 
         .produto-card img {
@@ -157,6 +163,15 @@
             background: var(--primary-dark);
         }
 
+        .badge-status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+
         #auth-container {
             max-width: 420px;
             margin: 40px auto;
@@ -191,8 +206,9 @@
             <!-- Aba Vitrine / Cardápio -->
             <div id="tab-vitrine" class="cliente-tab active">
                 <h2>Cardápio do Dia</h2>
+                <div id="status-pedido-cliente" style="margin-bottom: 15px;"></div>
                 <div id="lista-produtos-cliente" style="margin-top: 15px;">
-                    <p>Carregando produtos...</p>
+                    <p style="text-align:center;">Carregando produtos...</p>
                 </div>
             </div>
 
@@ -250,13 +266,17 @@
                     <input type="text" id="adm-nome-produto" placeholder="Nome do Produto">
                     <input type="number" id="adm-preco-produto" placeholder="Preço (Ex: 25.00)" step="0.01">
                     <input type="url" id="adm-foto-produto" placeholder="Link da Foto (Ex: https://...)" required>
-                    <small style="color: #747d8c; display: block; margin-top: -5px; margin-bottom: 10px;">Dica: Cole o link direto de uma imagem da internet.</small>
+                    <label style="font-weight: bold; margin-top: 10px; display: block;">Disponibilidade:</label>
+                    <select id="adm-status-produto">
+                        <option value="disponivel">Disponível</option>
+                        <option value="indisponivel">Indisponível (Esgotado)</option>
+                    </select>
                     <button class="btn-primary" onclick="cadastrarProduto()">Salvar Produto na Vitrine</button>
                 </div>
 
-                <h2>Produtos na Vitrine</h2>
+                <h2>Produtos Cadastrados</h2>
                 <div id="lista-produtos-admin" style="margin-top: 15px;">
-                    <p>Carregando produtos...</p>
+                    <p style="text-align:center;">Carregando produtos...</p>
                 </div>
             </div>
 
@@ -264,7 +284,7 @@
             <div id="admin-tab-pedidos" class="admin-tab" style="display:none;">
                 <h2>Pedidos Recebidos</h2>
                 <div id="lista-pedidos-admin">
-                    <p>Nenhum pedido no momento.</p>
+                    <p style="text-align:center;">Nenhum pedido no momento.</p>
                 </div>
             </div>
 
@@ -272,7 +292,7 @@
             <div id="admin-tab-avaliacoes" class="admin-tab" style="display:none;">
                 <h2>Avaliações dos Clientes</h2>
                 <div id="lista-avaliacoes-admin">
-                    <p>Carregando avaliações...</p>
+                    <p style="text-align:center;">Carregando avaliações...</p>
                 </div>
             </div>
 
@@ -311,7 +331,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // Configuração do Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyDxHIeZNBj30ohn5g9zu6puyEB7NZ5ru28",
             authDomain: "meudeliveryapp-eefb2.firebaseapp.com",
@@ -322,18 +341,15 @@
             measurementId: "G-1SVFNTGSXM"
         };
 
-        // Inicializa Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // ⚠️ COLOQUE AQUI O SEU E-MAIL EXATO DE ADMINISTRADOR:
         const ADMIN_EMAIL = "giliardmartins31@gmail.com"; 
 
         let usuarioAtual = null;
         let carrinho = [];
 
-        // Controle de Sessão Automático
         auth.onAuthStateChanged((user) => {
             if (user) {
                 usuarioAtual = user;
@@ -341,7 +357,6 @@
                 document.getElementById('btn-sair').style.display = 'block';
                 
                 if (user.email === ADMIN_EMAIL) {
-                    // Visão do Administrador
                     document.getElementById('view-admin').classList.add('active');
                     document.getElementById('view-cliente').classList.remove('active');
                     document.getElementById('nav-admin').style.display = 'flex';
@@ -351,7 +366,6 @@
                     carregarAvaliacoesAdmin();
                     carregarPedidosAdmin();
                 } else {
-                    // Visão do Cliente
                     document.getElementById('view-cliente').classList.add('active');
                     document.getElementById('view-admin').classList.remove('active');
                     document.getElementById('nav-cliente').style.display = 'flex';
@@ -359,6 +373,7 @@
                     document.getElementById('app-title').innerText = '🍔 Meu Delivery';
                     carregarProdutosCliente();
                     carregarPromocoes();
+                    verificarStatusPedidoCliente();
                 }
             } else {
                 usuarioAtual = null;
@@ -388,19 +403,17 @@
         }
 
         function fazerLogout() {
-            auth.signOut().then(() => {
-                alert("Você saiu da sua conta.");
-            });
+            auth.signOut().then(() => alert("Você saiu da sua conta."));
         }
 
         function esqueciSenha() {
             const email = document.getElementById('auth-email').value;
             if (!email) {
-                alert("Digite seu e-mail no campo acima para recuperar a senha.");
+                alert("Digite seu e-mail no campo acima.");
                 return;
             }
             auth.sendPasswordResetEmail(email)
-                .then(() => alert("E-mail de recuperação de senha enviado com sucesso!"))
+                .then(() => alert("E-mail de recuperação enviado!"))
                 .catch(error => alert("Erro: " + error.message));
         }
 
@@ -418,31 +431,37 @@
             event.currentTarget.classList.add('active');
         }
 
-        // --- CADASTRO E VITRINE (ADMIN) ---
+        // --- PRODUTOS ---
         async function cadastrarProduto() {
             const nome = document.getElementById('adm-nome-produto').value;
             const preco = parseFloat(document.getElementById('adm-preco-produto').value);
             const fotoUrl = document.getElementById('adm-foto-produto').value;
+            const status = document.getElementById('adm-status-produto').value;
 
             if (!nome || isNaN(preco) || !fotoUrl) {
-                alert("Preencha todos os campos corretamente, incluindo o link da foto.");
+                alert("Preencha todos os campos corretamente.");
                 return;
             }
 
             try {
                 await db.collection('produtos').add({
-                    nome,
-                    preco,
-                    fotoUrl,
+                    nome, preco, fotoUrl, status,
                     criadoEm: firebase.firestore.FieldValue.serverTimestamp()
                 });
-
-                alert("Produto cadastrado com sucesso na vitrine!");
+                alert("Produto cadastrado com sucesso!");
                 document.getElementById('adm-nome-produto').value = '';
                 document.getElementById('adm-preco-produto').value = '';
                 document.getElementById('adm-foto-produto').value = '';
             } catch (error) {
-                alert("Erro ao cadastrar produto: " + error.message);
+                alert("Erro: " + error.message);
+            }
+        }
+
+        async function alterarStatusProduto(id, novoStatus) {
+            try {
+                await db.collection('produtos').doc(id).update({ status: novoStatus });
+            } catch (error) {
+                alert("Erro ao alterar status: " + error.message);
             }
         }
 
@@ -451,17 +470,18 @@
             db.collection('produtos').onSnapshot(snapshot => {
                 container.innerHTML = '';
                 if (snapshot.empty) {
-                    container.innerHTML = `<p>Nenhum produto cadastrado no momento.</p>`;
+                    container.innerHTML = `<p style="text-align:center;">Nenhum produto no cardápio.</p>`;
                     return;
                 }
                 snapshot.forEach(doc => {
                     const p = doc.data();
+                    const indisponivel = p.status === 'indisponivel';
                     container.innerHTML += `
-                        <div class="produto-card">
+                        <div class="produto-card ${indisponivel ? 'indisponivel' : ''}">
                             <img src="${p.fotoUrl}" alt="${p.nome}">
                             <h3>${p.nome}</h3>
                             <p style="color: #2ed573; font-weight: bold; margin: 8px 0; font-size: 1.1rem;">R$ ${p.preco.toFixed(2)}</p>
-                            <button class="btn-primary" onclick="adicionarCarrinho('${p.nome}', ${p.preco})">Pedir</button>
+                            ${indisponivel ? '<p style="color:red; font-weight:bold;">Indisponível no momento</p>' : `<button class="btn-primary" onclick="adicionarCarrinho('${p.nome}', ${p.preco})">Pedir</button>`}
                         </div>
                     `;
                 });
@@ -473,39 +493,21 @@
             db.collection('produtos').onSnapshot(snapshot => {
                 container.innerHTML = '';
                 if (snapshot.empty) {
-                    container.innerHTML = `<p>Nenhum produto cadastrado no momento.</p>`;
+                    container.innerHTML = `<p style="text-align:center;">Nenhum produto cadastrado.</p>`;
                     return;
                 }
                 snapshot.forEach(doc => {
                     const p = doc.data();
+                    const id = doc.id;
+                    const isDisp = p.status === 'disponivel';
                     container.innerHTML += `
                         <div class="produto-card">
                             <img src="${p.fotoUrl}" alt="${p.nome}">
                             <h3>${p.nome}</h3>
-                            <p style="color: #2ed573; font-weight: bold; margin: 8px 0; font-size: 1.1rem;">R$ ${p.preco.toFixed(2)}</p>
-                        </div>
-                    `;
-                });
-            });
-        }
-
-        // --- VISUALIZAR AVALIAÇÕES (ADMIN) ---
-        function carregarAvaliacoesAdmin() {
-            const container = document.getElementById('lista-avaliacoes-admin');
-            db.collection('avaliacoes').orderBy('data', 'desc').onSnapshot(snapshot => {
-                container.innerHTML = '';
-                if (snapshot.empty) {
-                    container.innerHTML = `<p>Nenhuma avaliação recebida ainda.</p>`;
-                    return;
-                }
-                snapshot.forEach(doc => {
-                    const av = doc.data();
-                    let estrelas = "⭐".repeat(Number(av.nota));
-                    container.innerHTML += `
-                        <div class="card">
-                            <p><strong>Cliente:</strong> ${av.email}</p>
-                            <p><strong>Nota:</strong> ${estrelas} (${av.nota}/5)</p>
-                            <p><strong>Comentário:</strong> "${av.comentario || 'Sem comentário'}"</p>
+                            <p style="color: #2ed573; font-weight: bold; margin: 8px 0;">R$ ${p.preco.toFixed(2)}</p>
+                            <button class="btn-primary" style="background: ${isDisp ? '#2ed573' : '#ffa502'}; font-size: 0.9rem; padding: 8px;" onclick="alterarStatusProduto('${id}', '${isDisp ? 'indisponivel' : 'disponivel'}')">
+                                ${isDisp ? '🟢 Disponível (Mudar)' : '🔴 Indisponível (Mudar)'}
+                            </button>
                         </div>
                     `;
                 });
@@ -559,13 +561,14 @@
             const pagamento = document.getElementById('forma-pagamento').value;
             try {
                 await db.collection('pedidos').add({
-                    clienteEmail: usuarioAtual ? usuarioAtual.email : "Cliente Anônimo",
+                    clienteEmail: usuarioAtual ? usuarioAtual.email : "Anônimo",
                     itens: carrinho,
                     pagamento,
-                    status: "Em Preparo",
+                    status: "Aguardando Preparo",
+                    tempoMinutos: 0,
                     data: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                alert("Pedido realizado com sucesso via " + pagamento.toUpperCase() + "!");
+                alert("Pedido realizado com sucesso!");
                 carrinho = [];
                 atualizarVisualCarrinho();
                 mudarAbaCliente('vitrine');
@@ -579,21 +582,67 @@
             db.collection('pedidos').orderBy('data', 'desc').onSnapshot(snapshot => {
                 container.innerHTML = '';
                 if (snapshot.empty) {
-                    container.innerHTML = `<p>Nenhum pedido no momento.</p>`;
+                    container.innerHTML = `<p style="text-align:center;">Nenhum pedido no momento.</p>`;
                     return;
                 }
                 snapshot.forEach(doc => {
                     const p = doc.data();
+                    const id = doc.id;
                     let itensHtml = p.itens ? p.itens.map(i => `${i.name} (x${i.quantidade})`).join(', ') : '';
                     container.innerHTML += `
                         <div class="card">
                             <p><strong>Cliente:</strong> ${p.clienteEmail}</p>
                             <p><strong>Itens:</strong> ${itensHtml}</p>
                             <p><strong>Pagamento:</strong> ${(p.pagamento || '').toUpperCase()}</p>
-                            <p><strong>Status:</strong> <span style="color: #ff4757; font-weight: bold;">${p.status}</span></p>
+                            <p><strong>Status Atual:</strong> <span style="color: #ff4757; font-weight: bold;">${p.status}</span></p>
+                            
+                            <div style="margin-top: 12px; border-top: 1px solid #eee; padding-top: 10px;">
+                                <input type="number" id="tempo-${id}" placeholder="Minutos para entrega" style="margin-bottom: 5px;" value="${p.tempoMinutos || 15}">
+                                <button class="btn-primary" style="background:#ffa502; margin-bottom: 5px;" onclick="atualizarStatusPedido('${id}', 'Em Preparo')">👨‍🍳 Em Preparo (Definir Tempo)</button>
+                                <button class="btn-primary" style="background:#2ed573; margin-bottom: 5px;" onclick="atualizarStatusPedido('${id}', 'Saiu para Entrega')">🛵 Saiu para Entrega</button>
+                                <button class="btn-primary" style="background:#3742fa;" onclick="atualizarStatusPedido('${id}', 'Concluído')">✅ Concluído</button>
+                            </div>
                         </div>
                     `;
                 });
+            });
+        }
+
+        async function atualizarStatusPedido(id, novoStatus) {
+            let tempoMinutos = 0;
+            if (novoStatus === 'Em Preparo') {
+                const inputTempo = document.getElementById('tempo-' + id).value;
+                tempoMinutos = parseInt(inputTempo) || 15;
+            }
+            try {
+                await db.collection('pedidos').doc(id).update({
+                    status: novoStatus,
+                    tempoMinutos: tempoMinutos
+                });
+                alert("Status atualizado para: " + novoStatus);
+            } catch (error) {
+                alert("Erro: " + error.message);
+            }
+        }
+
+        function verificarStatusPedidoCliente() {
+            const container = document.getElementById('status-pedido-cliente');
+            db.collection('pedidos').where('clienteEmail', '==', usuarioAtual.email).orderBy('data', 'desc').limit(1).onSnapshot(snapshot => {
+                if (snapshot.empty) {
+                    container.innerHTML = '';
+                    return;
+                }
+                const pedido = snapshot.docs[0].data();
+                if (pedido.status === 'Concluído') {
+                    container.innerHTML = `<div class="card" style="background:#e3f2fd; text-align:center;"><p>🎉 Seu último pedido foi concluído!</p><button class="btn-primary" onclick="mudarAbaCliente('perfil')">Avaliar Atendimento ⭐</button></div>`;
+                } else {
+                    container.innerHTML = `
+                        <div class="card" style="background:#fff3cd; border-left: 5px solid #ffc107;">
+                            <p><strong>Acompanhe seu Pedido:</strong> <span style="color:#856404; font-weight:bold;">${pedido.status}</span></p>
+                            ${pedido.tempoMinutos > 0 ? `<p style="margin-top:5px;">⏳ Tempo estimado: <strong>${pedido.tempoMinutos} minutos</strong></p>` : ''}
+                        </div>
+                    `;
+                }
             });
         }
 
@@ -615,6 +664,28 @@
             }
         }
 
+        function carregarAvaliacoesAdmin() {
+            const container = document.getElementById('lista-avaliacoes-admin');
+            db.collection('avaliacoes').orderBy('data', 'desc').onSnapshot(snapshot => {
+                container.innerHTML = '';
+                if (snapshot.empty) {
+                    container.innerHTML = `<p style="text-align:center;">Nenhuma avaliação recebida.</p>`;
+                    return;
+                }
+                snapshot.forEach(doc => {
+                    const av = doc.data();
+                    let estrelas = "⭐".repeat(Number(av.nota));
+                    container.innerHTML += `
+                        <div class="card">
+                            <p><strong>Cliente:</strong> ${av.email}</p>
+                            <p><strong>Nota:</strong> ${estrelas} (${av.nota}/5)</p>
+                            <p><strong>Comentário:</strong> "${av.comentario || 'Sem comentário'}"</p>
+                        </div>
+                    `;
+                });
+            });
+        }
+
         async function enviarPromocao() {
             const titulo = document.getElementById('adm-titulo-promo').value;
             const texto = document.getElementById('adm-texto-promo').value;
@@ -624,8 +695,7 @@
             }
             try {
                 await db.collection('promocoes').add({
-                    titulo,
-                    texto,
+                    titulo, texto,
                     data: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 alert("Promoção enviada com sucesso!");
