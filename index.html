@@ -120,7 +120,7 @@
             border-radius: 10px;
             margin-bottom: 15px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-          @admit-align: center;
+            text-align: center;
             transition: opacity 0.3s;
         }
 
@@ -163,6 +163,19 @@
             background: var(--primary-dark);
         }
 
+        /* Animação da Moto para Entrega */
+        @keyframes andarMoto {
+            0% { transform: translateX(0px); }
+            50% { transform: translateX(120px); }
+            100% { transform: translateX(0px); }
+        }
+
+        .animacao-entrega {
+            display: inline-block;
+            animation: andarMoto 2s infinite ease-in-out;
+            font-size: 1.8rem;
+        }
+
         #auth-container {
             max-width: 420px;
             margin: 40px auto;
@@ -197,7 +210,9 @@
             <!-- Aba Vitrine / Cardápio -->
             <div id="tab-vitrine" class="cliente-tab active">
                 <h2>Cardápio do Dia</h2>
-                <div id="status-pedido-cliente" style="margin-bottom: 15px;"></div>
+                <!-- Barra de Acompanhamento em Tempo Real do Pedido -->
+                <div id="status-pedido-cliente" style="margin-top: 15px; margin-bottom: 15px;"></div>
+                
                 <div id="lista-produtos-cliente" style="margin-top: 15px;">
                     <p style="text-align:center;">Carregando produtos...</p>
                 </div>
@@ -347,8 +362,9 @@
 
         const ADMIN_EMAIL = "giliardmartins31@gmail.com"; 
 
-        let usuarioAusuarioAtual
+        let usuarioAtual = null;
         let carrinho = [];
+        let timerIntervalo = null;
 
         auth.onAuthStateChanged((user) => {
             if (user) {
@@ -617,7 +633,8 @@
             try {
                 await db.collection('pedidos').doc(id).update({
                     status: novoStatus,
-                    tempoMinutos: tempoMinutos
+                    tempoMinutos: tempoMinutos,
+                    inicioPreparo: novoStatus === 'Em Preparo' ? firebase.firestore.FieldValue.serverTimestamp() : (new Date())
                 });
                 alert("Status atualizado para: " + novoStatus);
             } catch (error) {
@@ -633,17 +650,66 @@
                     return;
                 }
                 const pedido = snapshot.docs[0].data();
+                
                 if (pedido.status === 'Concluído') {
-                    container.innerHTML = `<div class="card" style="background:#e3f2fd; text-align:center;"><p>🎉 Seu último pedido foi concluído!</p><button class="btn-primary" onclick="mudarAbaCliente('perfil')">Avaliar Atendimento ⭐</button></div>`;
-                } else {
+                    if (timerIntervalo) clearInterval(timerIntervalo);
+                    container.innerHTML = `
+                        <div class="card" style="background:#e3f2fd; text-align:center;">
+                            <p>🎉 Seu pedido foi entregue e concluído!</p>
+                            <button class="btn-primary" onclick="mudarAbaCliente('perfil')">Avaliar Atendimento ⭐</button>
+                        </div>
+                    `;
+                } else if (pedido.status === 'Saiu para Entrega') {
+                    if (timerIntervalo) clearInterval(timerIntervalo);
+                    container.innerHTML = `
+                        <div class="card" style="background:#e8f8f5; border-left: 5px solid #2ed573; text-align:center;">
+                            <p><strong>Status do Pedido:</strong> <span style="color:#2ed573; font-weight:bold;">Saiu para Entrega! 🛵</span></p>
+                            <div style="margin: 15px 0; overflow: hidden;">
+                                <span class="animacao-entrega">🛵💨 🏠</span>
+                            </div>
+                            <p style="font-size: 0.9rem; color: #555;">O motoboy está a caminho do seu endereço!</p>
+                        </div>
+                    `;
+                } else if (pedido.status === 'Em Preparo') {
                     container.innerHTML = `
                         <div class="card" style="background:#fff3cd; border-left: 5px solid #ffc107;">
-                            <p><strong>Acompanhe seu Pedido:</strong> <span style="color:#856404; font-weight:bold;">${pedido.status}</span></p>
-                            ${pedido.tempoMinutos > 0 ? `<p style="margin-top:5px;">⏳ Tempo estimado: <strong>${pedido.tempoMinutos} minutos</strong></p>` : ''}
+                            <p><strong>Acompanhe seu Pedido:</strong> <span style="color:#856404; font-weight:bold;">Em Preparo 👨‍🍳</span></p>
+                            <p style="margin-top:8px; font-size: 1.1rem;">⏳ Tempo estimado: <strong id="cronometro-regressivo" style="color: #ff4757;">Calculando...</strong></p>
+                        </div>
+                    `;
+                    iniciarCronometro(pedido.tempoMinutos || 15);
+                } else {
+                    container.innerHTML = `
+                        <div class="card" style="background:#f1f2f6; border-left: 5px solid #747d8c;">
+                            <p><strong>Status do Pedido:</strong> <span style="color:#747d8c; font-weight:bold;">${pedido.status}</span></p>
                         </div>
                     `;
                 }
             });
+        }
+
+        function iniciarCronometro(minutos) {
+            if (timerIntervalo) clearInterval(timerIntervalo);
+            let tempoRestante = minutos * 60; // converter para segundos
+
+            timerIntervalo = setInterval(() => {
+                let elemento = document.getElementById('cronometro-regressivo');
+                if (!elemento) {
+                    clearInterval(timerIntervalo);
+                    return;
+                }
+
+                if (tempoRestante <= 0) {
+                    elemento.innerText = "Quase pronto / A qualquer momento!";
+                    clearInterval(timerIntervalo);
+                    return;
+                }
+
+                let m = Math.floor(tempoRestante / 60);
+                let s = tempoRestante % 60;
+                elemento.innerText = `${m}m ${s < 10 ? '0' : ''}${s}s`;
+                tempoRestante--;
+            }, 1000);
         }
 
         // --- AVALIAÇÕES E PROMOÇÕES ---
