@@ -51,7 +51,6 @@
             align-items: center;
         }
 
-        /* Estilo da Logo + Saudação no Topo */
         .header-brand {
             display: flex;
             align-items: center;
@@ -97,7 +96,6 @@
             display: block;
         }
 
-        /* Menus Superiores (Cliente e Admin) */
         .top-subnav {
             display: flex;
             justify-content: space-between;
@@ -128,7 +126,6 @@
             color: var(--white);
         }
 
-        /* Menus Inferiores */
         nav {
             position: fixed;
             bottom: 0;
@@ -261,7 +258,6 @@
             max-width: 90%;
         }
 
-        /* Modal de Cupom com Confetes */
         #modal-cupom-ganho {
             position: fixed;
             top: 0;
@@ -324,7 +320,7 @@
         </div>
     </div>
 
-    <!-- CABEÇALHO ATUALIZADO: Logo do App + Saudação Dinâmica com Primeiro Nome -->
+    <!-- CABEÇALHO -->
     <header>
         <div class="header-brand">
             <img src="img/icone-192.png" alt="Logo" class="header-logo" id="header-logo-img">
@@ -394,7 +390,6 @@
                     <p>Seu carrinho está vazio.</p>
                 </div>
 
-                <!-- Seção de Cupom -->
                 <div class="card" style="background: #f1f2f6; border-left: 5px solid var(--primary);">
                     <h3 style="font-size: 1rem; margin-bottom: 8px;">🎁 Possui Cupom de Desconto?</h3>
                     <div style="display: flex; gap: 8px;">
@@ -410,7 +405,6 @@
                     <option value="dinheiro">Dinheiro</option>
                 </select>
 
-                <!-- Bloco dinâmico de troco -->
                 <div id="bloco-troco" class="card" style="display:none; background: #fff3cd; border-left: 5px solid #ffc107; margin-top: 10px;">
                     <label style="font-weight: bold; font-size: 0.95rem;">Vai precisar de troco?</label>
                     <select id="precisa-troco" onchange="alternarCampoTroco(this.value)">
@@ -482,14 +476,12 @@
         <!-- ================= VISÃO DO ADMINISTRADOR ================= -->
         <div id="view-admin" class="view-section">
             
-            <!-- Menu Superior do Admin -->
             <div class="top-subnav">
                 <button id="btn-admin-sub-vitrine" class="active" onclick="mudarAbaAdminSuperior('vitrine')">🍔 Vitrine</button>
                 <button id="btn-admin-sub-pedidos" onclick="mudarAbaAdminSuperior('pedidos')">📦 Pedidos</button>
                 <button id="btn-admin-sub-caixa" onclick="mudarAbaAdminSuperior('caixa')">💰 Caixa</button>
             </div>
 
-            <!-- Indicador de Pessoas Conectadas e Lista Detalhada de E-mails -->
             <div class="card" style="background: #e8f4fd; border-left: 5px solid #3742fa; padding: 12px; margin-bottom: 15px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleListaOnlineAdmin()">
                     <div>
@@ -498,7 +490,6 @@
                     </div>
                     <span id="contador-online" style="background: #3742fa; color: white; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 1.1rem;">1</span>
                 </div>
-                <!-- Lista expansível com os e-mails online -->
                 <div id="container-lista-online-detalhada" style="display: none; margin-top: 12px; border-top: 1px solid #b7d7f7; padding-top: 8px;">
                     <p style="font-size: 0.85rem; font-weight: bold; margin-bottom: 5px; color: #1e3799;">E-mails online no momento:</p>
                     <div id="detalhes-emails-online">
@@ -507,10 +498,10 @@
                 </div>
             </div>
 
-            <!-- Admin: Vitrine -->
+            <!-- Admin: Vitrine (Atualizado com Edição e Exclusão Direta) -->
             <div id="admin-tab-vitrine" class="admin-tab">
                 <div class="card">
-                    <h3>Cadastrar Produto</h3>
+                    <h3>Cadastrar Novo Produto</h3>
                     <input type="text" id="adm-nome-produto" placeholder="Nome do Produto">
                     <input type="number" id="adm-preco-produto" placeholder="Preço (Ex: 25.00)" step="0.01">
                     <input type="url" id="adm-foto-produto" placeholder="Link da Foto (Ex: https://...)" required>
@@ -522,7 +513,7 @@
                     <button class="btn-primary" onclick="cadastrarProduto()">Salvar Produto e Alertar</button>
                 </div>
 
-                <h2>Produtos Cadastrados</h2>
+                <h2>Produtos Cadastrados (Editar ou Excluir)</h2>
                 <div id="lista-produtos-admin" style="margin-top: 15px;">
                     <p style="text-align:center;">Carregando produtos...</p>
                 </div>
@@ -603,7 +594,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // Registro automático do Service Worker para rodar notificações em background
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
@@ -648,7 +638,6 @@
         let pingInterval = null;
         let cupomAplicado = null;
 
-        // Função para atualizar o topo com o primeiro nome do usuário logado
         async function atualizarSaudacaoTopo(uid) {
             const tituloEl = document.getElementById('app-title');
             if (!uid) {
@@ -659,7 +648,7 @@
                 const doc = await db.collection('usuarios').doc(uid).get();
                 if (doc.exists && doc.data().nome) {
                     const nomeCompleto = doc.data().nome.trim();
-                    const primeiroNome = nomeCompleto.split(" ")[0]; // Pega só o primeiro nome
+                    const primeiroNome = nomeCompleto.split(" ")[0];
                     tituloEl.innerText = `Olá, ${primeiroNome}!`;
                 } else {
                     tituloEl.innerText = "Olá, Cliente!";
@@ -732,7 +721,6 @@
                     document.getElementById('nav-cliente').style.display = 'flex';
                     document.getElementById('nav-admin').style.display = 'none';
                     
-                    // Atualiza com o primeiro nome no topo
                     await atualizarSaudacaoTopo(user.uid);
 
                     carregarProdutosCliente();
@@ -1135,6 +1123,41 @@
             }
         }
 
+        // Função para excluir um produto definitivamente do banco de dados (Admin)
+        async function excluirProdutoAdmin(id) {
+            if (confirm("Tem certeza que deseja excluir permanentemente este produto?")) {
+                try {
+                    await db.collection('produtos').doc(id).delete();
+                    mostrarBannerNotificacao("Produto excluído com sucesso!");
+                } catch (error) {
+                    mostrarBannerNotificacao("Erro ao excluir produto", "#ff4757");
+                }
+            }
+        }
+
+        // Função para salvar alterações feitas em um produto já existente (Nome, Preço, Foto)
+        async function salvarEdicaoProdutoAdmin(id) {
+            const novoNome = document.getElementById(`adm-edit-nome-${id}`).value;
+            const novoPreco = parseFloat(document.getElementById(`adm-edit-preco-${id}`).value);
+            const novaFoto = document.getElementById(`adm-edit-foto-${id}`).value;
+
+            if (!novoNome || isNaN(novoPreco) || !novaFoto) {
+                mostrarBannerNotificacao("Preencha corretamente os campos do produto.", "#ff4757");
+                return;
+            }
+
+            try {
+                await db.collection('produtos').doc(id).update({
+                    nome: novoNome,
+                    preco: novoPreco,
+                    fotoUrl: novaFoto
+                });
+                mostrarBannerNotificacao("Produto atualizado com sucesso!");
+            } catch (error) {
+                mostrarBannerNotificacao("Erro ao atualizar produto", "#ff4757");
+            }
+        }
+
         function carregarProdutosCliente() {
             const container = document.getElementById('lista-produtos-cliente');
             db.collection('produtos').onSnapshot(snapshot => {
@@ -1167,6 +1190,7 @@
             });
         }
 
+        // Listagem do Admin atualizada com inputs editáveis, botão de salvar alteração, alternar status e excluir produto de vez
         function carregarProdutosAdmin() {
             const container = document.getElementById('lista-produtos-admin');
             db.collection('produtos').onSnapshot(snapshot => {
@@ -1179,14 +1203,28 @@
                     const p = doc.data();
                     const id = doc.id;
                     const isDisp = p.status === 'disponivel';
+                    
                     container.innerHTML += `
-                        <div class="produto-card">
-                            <img src="${p.fotoUrl}" alt="${p.nome}">
-                            <h3>${p.nome}</h3>
-                            <p style="color: #2ed573; font-weight: bold; margin: 8px 0;">R$ ${p.preco.toFixed(2)}</p>
-                            <button class="btn-primary" style="background: ${isDisp ? '#2ed573' : '#ffa502'}; font-size: 0.9rem; padding: 8px;" onclick="alterarStatusProduto('${id}', '${isDisp ? 'indisponivel' : 'disponivel'}')">
-                                ${isDisp ? '🟢 Disponível (Mudar)' : '🔴 Indisponível (Mudar)'}
-                            </button>
+                        <div class="card" style="border-left: 5px solid ${isDisp ? '#2ed573' : '#ffa502'}; margin-bottom: 15px;">
+                            <img src="${p.fotoUrl}" alt="${p.nome}" style="width: 100%; height: 140px; object-fit: cover; border-radius: 8px; margin-bottom: 10px;">
+                            
+                            <label style="font-size: 0.85rem; font-weight: bold; color: #666;">Nome do Produto:</label>
+                            <input type="text" id="adm-edit-nome-${id}" value="${p.nome}" style="margin: 4px 0 10px 0;">
+
+                            <label style="font-size: 0.85rem; font-weight: bold; color: #666;">Preço (R$):</label>
+                            <input type="number" id="adm-edit-preco-${id}" value="${p.preco.toFixed(2)}" step="0.01" style="margin: 4px 0 10px 0;">
+
+                            <label style="font-size: 0.85rem; font-weight: bold; color: #666;">Link da Foto:</label>
+                            <input type="url" id="adm-edit-foto-${id}" value="${p.fotoUrl}" style="margin: 4px 0 10px 0;">
+
+                            <div style="display: flex; gap: 8px; margin-top: 5px;">
+                                <button class="btn-primary" style="background: #3742fa; margin:0; font-size: 0.9rem; flex: 1;" onclick="salvarEdicaoProdutoAdmin('${id}')">💾 Salvar Alterações</button>
+                                <button class="btn-primary" style="background: ${isDisp ? '#ffa502' : '#2ed573'}; margin:0; font-size: 0.9rem; flex: 1;" onclick="alterarStatusProduto('${id}', '${isDisp ? 'indisponivel' : 'disponivel'}')">
+                                    ${isDisp ? '🔴 Ocultar' : '🟢 Exibir'}
+                                </button>
+                            </div>
+
+                            <button class="btn-primary" style="background: #ff4757; margin-top: 8px; font-size: 0.9rem;" onclick="excluirProdutoAdmin('${id}')">🗑️ Excluir Definitivamente</button>
                         </div>
                     `;
                 });
@@ -1387,7 +1425,6 @@
             }
         }
 
-        // ================= FUNÇÃO ATUALIZADA: CARREGAR E EDITAR PEDIDOS NO ADMIN =================
         function carregarPedidosAdmin() {
             const container = document.getElementById('lista-pedidos-admin');
             db.collection('pedidos').orderBy('data', 'desc').onSnapshot(snapshot => {
@@ -1401,7 +1438,6 @@
                         temAtivos = true;
                         let dataFormatada = p.data && p.data.toDate ? p.data.toDate().toLocaleString('pt-BR') : 'Horário não registrado';
 
-                        // Monta a lista de itens editáveis em tabela para o painel admin
                         let itensEdicaoHtml = '';
                         if (p.itens && p.itens.length > 0) {
                             p.itens.forEach((item, itemIndex) => {
@@ -1464,14 +1500,11 @@
             });
         }
 
-        // Função para recalcular automaticamente o total ao alterar quantidade ou preço unitário na tela do admin
         function recalcularTotalAdmin(idPedido) {
-            // Procura os elementos da tabela e faz o somatório atualizado
             const tabela = document.getElementById(`adm-tabela-itens-${idPedido}`);
             if (!tabela) return;
             
             let novoTotal = 0;
-            // Como conhecemos a estrutura, iteramos pelas linhas ou pegamos inputs dinamicamente
             let linhas = tabela.querySelectorAll('tr');
             linhas.forEach((_, index) => {
                 const inputQtd = document.getElementById(`adm-item-qtd-${idPedido}-${index}`);
@@ -1489,7 +1522,6 @@
             }
         }
 
-        // Função para salvar as modificações do admin no banco de dados
         async function salvarEdicaoPedidoAdmin(idPedido, totalItens) {
             let novosItens = [];
             let novoValorTotal = parseFloat(document.getElementById(`adm-valortotal-${idPedido}`).value) || 0;
@@ -1499,7 +1531,6 @@
                 const inputPreco = document.getElementById(`adm-item-preco-${idPedido}-${i}`);
                 
                 if (inputQtd && inputPreco) {
-                    // Recuperamos o nome do item a partir da própria linha da tabela
                     let nomeItem = inputQtd.closest('tr').cells[0].innerText;
                     novosItens.push({
                         name: nomeItem,
