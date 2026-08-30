@@ -1375,7 +1375,7 @@
                 return;
             }
 
-            // AQUI ESTÁ O FLUXO: Se o cliente tentar finalizar e não estiver logado, abre o login/cadastro!
+            // EXIGE LOGIN SOMENTE AQUI: Ao clicar em finalizar pedido, se não estiver logado, abre o login/cadastro.
             if (!usuarioAtual) {
                 mostrarBannerNotificacao("Faça login ou cadastre-se para concluir o pedido.", "#ffa502");
                 abrirTelaLogin();
