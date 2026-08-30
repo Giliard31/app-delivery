@@ -491,6 +491,8 @@
 
                     <input type="text" id="adm-titulo-promo" placeholder="Código do Cupom (Ex: DESCONTO10)" style="text-transform: uppercase;">
                     <input type="number" id="adm-valor-desconto" placeholder="Valor do Desconto em Reais (Ex: 5.00)" step="0.01">
+                    <label style="font-weight: bold; font-size: 0.9rem; margin-top: 5px; display: block;">Validade (Minutos):</label>
+                    <input type="number" id="adm-tempo-validade" placeholder="Tempo de validade em min (Ex: 30)" value="30">
                     <textarea id="adm-texto-promo" placeholder="Descrição / Mensagem do cupom..."></textarea>
                     
                     <button class="btn-primary" onclick="enviarPromocao()">Gerar e Enviar Cupom</button>
@@ -604,9 +606,7 @@
                 document.getElementById('view-auth').classList.remove('active');
                 document.getElementById('btn-sair').style.display = 'block';
                 
-                // Tenta pedir permissão sutilmente ao logar caso o navegador permita fluxo automático
                 solicitarPermissaoNotificacaoAutomatica();
-
                 iniciarPresencaOnline();
 
                 if (user.email === ADMIN_EMAIL) {
@@ -648,7 +648,6 @@
             }
         });
 
-        // Caso o navegador bloqueie popups automáticos no carregamento, garante permissão no primeiro toque na tela
         window.addEventListener('click', () => {
             solicitarPermissaoNotificacaoAutomatica();
         }, { once: true });
@@ -1129,6 +1128,15 @@
                 let cupomValido = null;
                 snapshot.forEach(doc => {
                     let d = doc.data();
+                    // Validação baseada no tempo de expiração
+                    if (d.data && d.tempoValidadeMinutos) {
+                        let criacaoMs = d.data.toDate().getTime();
+                        let expiracaoMs = criacaoMs + (d.tempoValidadeMinutos * 60 * 1000);
+                        if (Date.now() > expiracaoMs) {
+                            return; // Expirado
+                        }
+                    }
+
                     if (d.destino === 'todos' || d.destino === usuarioAtual.email) {
                         cupomValido = d;
                     }
@@ -1137,7 +1145,7 @@
                 if (!cupomValido) {
                     msgEl.style.display = 'block';
                     msgEl.style.color = '#ff4757';
-                    msgEl.innerText = "Este cupom não é válido para a sua conta.";
+                    msgEl.innerText = "Este cupom expirou ou não é válido para a sua conta.";
                     cupomAplicado = null;
                     atualizarVisualCarrinho();
                     return;
@@ -1195,6 +1203,7 @@
             let valorTotalPedido = Math.max(0, subtotalPedido - descontoAplicado);
 
             try {
+                // Adiciona o pedido registrando a data e hora exata do servidor do Firestore
                 await db.collection('pedidos').add({
                     clienteEmail: usuarioAtual.email,
                     clienteNome: dadosCliente.nome,
@@ -1208,7 +1217,7 @@
                     status: "Aguardando Preparo",
                     tempoMinutos: 0,
                     visivelParaCliente: true,
-                    data: firebase.firestore.FieldValue.serverTimestamp()
+                    data: firebase.firestore.FieldValue.serverTimestamp() // Registro exato da hora do pedido
                 });
                 mostrarBannerNotificacao("Pedido realizado com sucesso!");
                 carrinho = [];
@@ -1233,10 +1242,13 @@
                     if (p.status !== 'Concluído') {
                         temAtivos = true;
                         let itensHtml = p.itens ? p.itens.map(i => `${i.name} (x${i.quantidade})`).join(', ') : '';
+                        let dataFormatada = p.data && p.data.toDate ? p.data.toDate().toLocaleString('pt-BR') : 'Horário não registrado';
+
                         container.innerHTML += `
                             <div class="card" style="border-left: 5px solid var(--primary);">
                                 <p><strong>Cliente:</strong> ${p.clienteNome || 'Anônimo'} (${p.clienteEmail})</p>
                                 <p style="background: #f8f9fa; padding: 8px; border-radius: 6px; margin: 6px 0;">
+                                    🕒 <strong>Horário do Pedido:</strong> ${dataFormatada}<br>
                                     📍 <strong>Endereço:</strong> ${p.enderecoEntrega || 'Não informado'}<br>
                                     🗺️ <strong>Referência:</strong> ${p.referencia || 'Nenhuma'}
                                 </p>
@@ -1531,6 +1543,7 @@
             const destino = document.getElementById('adm-cupom-destino').value;
             const titulo = document.getElementById('adm-titulo-promo').value.trim().toUpperCase();
             const valorDesconto = parseFloat(document.getElementById('adm-valor-desconto').value);
+            const tempoValidadeMinutos = parseInt(document.getElementById('adm-tempo-validade').value) || 30;
             const texto = document.getElementById('adm-texto-promo').value;
 
             if (!titulo || isNaN(valorDesconto) || !texto) {
@@ -1539,14 +1552,16 @@
             }
 
             try {
+                // Salva o cupom com o tempo de validade e carimbo de data/hora do servidor
                 await db.collection('promocoes').add({
-                    destino, // 'todos' ou o e-mail específico
+                    destino, 
                     titulo,
                     valorDesconto,
+                    tempoValidadeMinutos,
                     texto,
                     data: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                mostrarBannerNotificacao("Cupom gerado e enviado com sucesso!");
+                mostrarBannerNotificacao("Cupom gerado com tempo de expiração e enviado!");
                 document.getElementById('adm-titulo-promo').value = '';
                 document.getElementById('adm-valor-desconto').value = '';
                 document.getElementById('adm-texto-promo').value = '';
@@ -1560,8 +1575,20 @@
             db.collection('promocoes').onSnapshot(snapshot => {
                 container.innerHTML = '';
                 let meusCupons = [];
+                let agoraMs = Date.now();
+
                 snapshot.forEach(doc => {
                     let p = doc.data();
+                    
+                    // Verifica se o cupom expirou com base no tempo estipulado
+                    if (p.data && p.tempoValidadeMinutos) {
+                        let criacaoMs = p.data.toDate().getTime();
+                        let expiracaoMs = criacaoMs + (p.tempoValidadeMinutos * 60 * 1000);
+                        if (agoraMs > expiracaoMs) {
+                            return; // Ignora cupons expirados (eles somem automaticamente)
+                        }
+                    }
+
                     if (p.destino === 'todos' || p.destino === usuarioAtual.email) {
                         meusCupons.push(p);
                     }
@@ -1577,6 +1604,7 @@
                         <div class="card" style="border-left: 5px solid var(--primary);">
                             <h3>🎁 ${p.titulo} (${p.destino === 'todos' ? 'Geral' : 'Exclusivo para você'})</h3>
                             <p style="margin: 6px 0;">Desconto: <strong>R$ ${(p.valorDesconto || 0).toFixed(2)}</strong></p>
+                            <p style="color: #666; font-size: 0.85rem; margin-bottom: 6px;">⏱️ Válido por ${p.tempoValidadeMinutos || 30} minutos após gerado.</p>
                             <p>${p.texto}</p>
                         </div>
                     `;
