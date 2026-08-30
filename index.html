@@ -44,14 +44,32 @@
         header {
             background-color: var(--primary);
             color: var(--white);
-            padding: 15px 18px;
-            text-align: center;
-            font-size: 1.2rem;
-            font-weight: bold;
+            padding: 12px 18px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
+        }
+
+        /* Estilo da Logo + Saudação no Topo */
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-logo {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            background-color: #fff;
+        }
+
+        #app-title {
+            font-size: 1.1rem;
+            font-weight: bold;
         }
 
         header button.btn-sair {
@@ -306,8 +324,12 @@
         </div>
     </div>
 
+    <!-- CABEÇALHO ATUALIZADO: Logo do App + Saudação Dinâmica com Primeiro Nome -->
     <header>
-        <span id="app-title">🍔 Meu Delivery</span>
+        <div class="header-brand">
+            <img src="img/icone-192.png" alt="Logo" class="header-logo" id="header-logo-img">
+            <span id="app-title">Olá, Visitante!</span>
+        </div>
         <div style="display: flex; gap: 8px; align-items: center;">
             <button id="btn-sair" class="btn-sair" style="display:none;" onclick="fazerLogout()">Sair</button>
         </div>
@@ -542,7 +564,6 @@
                     <label style="font-weight: bold;">Enviar Para:</label>
                     <select id="adm-cupom-destino" style="margin-bottom: 10px;">
                         <option value="todos">🌐 Para Todos os Clientes</option>
-                        <!-- Os e-mails dos clientes serão injetados aqui -->
                     </select>
 
                     <input type="text" id="adm-titulo-promo" placeholder="Código do Cupom (Ex: DESCONTO10)" style="text-transform: uppercase;">
@@ -591,7 +612,6 @@
             });
         }
 
-        // Função embutida para solicitar permissão nativa automaticamente caso o usuário ainda não tenha escolhido
         function solicitarPermissaoNotificacaoAutomatica() {
             if ('Notification' in window) {
                 if (Notification.permission === 'default') {
@@ -626,7 +646,28 @@
         let modoCadastroAtivo = false;
         let pedidoConcluidoNaoAvaliadoId = null;
         let pingInterval = null;
-        let cupomAplicado = null; // Guarda o cupom ativo no carrinho
+        let cupomAplicado = null;
+
+        // Função para atualizar o topo com o primeiro nome do usuário logado
+        async function atualizarSaudacaoTopo(uid) {
+            const tituloEl = document.getElementById('app-title');
+            if (!uid) {
+                tituloEl.innerText = "Olá, Visitante!";
+                return;
+            }
+            try {
+                const doc = await db.collection('usuarios').doc(uid).get();
+                if (doc.exists && doc.data().nome) {
+                    const nomeCompleto = doc.data().nome.trim();
+                    const primeiroNome = nomeCompleto.split(" ")[0]; // Pega só o primeiro nome
+                    tituloEl.innerText = `Olá, ${primeiroNome}!`;
+                } else {
+                    tituloEl.innerText = "Olá, Cliente!";
+                }
+            } catch (e) {
+                tituloEl.innerText = "Olá, Cliente!";
+            }
+        }
 
         function falarMensagem(texto) {
             if ('speechSynthesis' in window) {
@@ -661,7 +702,7 @@
             }
         }
 
-        auth.onAuthStateChanged((user) => {
+        auth.onAuthStateChanged(async (user) => {
             if (user) {
                 usuarioAtual = user;
                 document.getElementById('view-auth').classList.remove('active');
@@ -690,13 +731,16 @@
                     document.getElementById('view-cliente').classList.add('active');
                     document.getElementById('nav-cliente').style.display = 'flex';
                     document.getElementById('nav-admin').style.display = 'none';
-                    document.getElementById('app-title').innerText = '🍔 Meu Delivery';
+                    
+                    // Atualiza com o primeiro nome no topo
+                    await atualizarSaudacaoTopo(user.uid);
+
                     carregarProdutosCliente();
                     carregarPromocoesCliente();
                     carregarPedidosCliente();
                     carregarPerfilCliente();
                     ouvirNotificacoesNovosPratos();
-                    ouvirCuponsNovosCliente(); // Escuta cupons em tempo real para disparar confetes e modal
+                    ouvirCuponsNovosCliente();
                 }
             } else {
                 usuarioAtual = null;
@@ -707,7 +751,7 @@
                 document.getElementById('nav-cliente').style.display = 'none';
                 document.getElementById('nav-admin').style.display = 'none';
                 document.getElementById('btn-sair').style.display = 'none';
-                document.getElementById('app-title').innerText = '🍔 Meu Delivery';
+                document.getElementById('app-title').innerText = 'Olá, Visitante!';
             }
         });
 
@@ -739,11 +783,7 @@
 
         function toggleListaOnlineAdmin() {
             const container = document.getElementById('container-lista-online-detalhada');
-            if (container.style.display === 'none' || container.style.display === '') {
-                container.style.display = 'block';
-            } else {
-                container.style.display = 'none';
-            }
+            container.style.display = (container.style.display === 'none' || container.style.display === '') ? 'block' : 'none';
         }
 
         function selecionarEmailOnline(email) {
@@ -775,11 +815,7 @@
 
                 document.getElementById('contador-online').innerText = contadorAtivos > 0 ? contadorAtivos : 1;
                 const detalhesEl = document.getElementById('detalhes-emails-online');
-                if (listaHtml !== '') {
-                    detalhesEl.innerHTML = listaHtml;
-                } else {
-                    detalhesEl.innerHTML = `<p style="font-size: 0.85rem; color: #57606f;">Nenhum outro usuário online.</p>`;
-                }
+                detalhesEl.innerHTML = listaHtml !== '' ? listaHtml : `<p style="font-size: 0.85rem; color: #57606f;">Nenhum outro usuário online.</p>`;
             });
         }
 
@@ -791,14 +827,9 @@
             setTimeout(() => { banner.style.display = 'none'; }, 4000);
         }
 
-        // Funções do Modal de Cupom com Confetes
         function dispararChuvaConfetes() {
             if (typeof confetti === 'function') {
-                confetti({
-                    particleCount: 120,
-                    spread: 80,
-                    origin: { y: 0.5 }
-                });
+                confetti({ particleCount: 120, spread: 80, origin: { y: 0.5 } });
             }
         }
 
@@ -815,7 +846,6 @@
             document.getElementById('modal-cupom-ganho').style.display = 'none';
         }
 
-        // Ouvir novos cupons em tempo real para o cliente logado
         function ouvirCuponsNovosCliente() {
             let primeiraVez = true;
             db.collection('promocoes').orderBy('data', 'desc').limit(1).onSnapshot(snapshot => {
@@ -941,6 +971,10 @@
                     nome, email: usuarioAtual.email, endereco, bairro, cidade, referencia,
                     atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
+                
+                // Atualiza o primeiro nome imediatamente no topo após salvar alterações
+                await atualizarSaudacaoTopo(usuarioAtual.uid);
+
                 mostrarBannerNotificacao("Perfil atualizado com sucesso!");
             } catch (error) {
                 mostrarBannerNotificacao("Erro ao atualizar: " + error.message, "#ff4757");
@@ -1011,22 +1045,15 @@
 
         function verificarTroco(forma) {
             const blocoTroco = document.getElementById('bloco-troco');
-            if (forma === 'dinheiro') {
-                blocoTroco.style.display = 'block';
-            } else {
-                blocoTroco.style.display = 'none';
+            blocoTroco.style.display = (forma === 'dinheiro') ? 'block' : 'none';
+            if (forma !== 'dinheiro') {
                 document.getElementById('precisa-troco').value = 'nao';
                 document.getElementById('campo-valor-troco').style.display = 'none';
             }
         }
 
         function alternarCampoTroco(resp) {
-            const campoValor = document.getElementById('campo-valor-troco');
-            if (resp === 'sim') {
-                campoValor.style.display = 'block';
-            } else {
-                campoValor.style.display = 'none';
-            }
+            document.getElementById('campo-valor-troco').style.display = (resp === 'sim') ? 'block' : 'none';
         }
 
         function ouvirNotificacoesNovosPratos() {
@@ -1266,9 +1293,7 @@
                     if (d.data && d.tempoValidadeMinutos) {
                         let criacaoMs = d.data.toDate().getTime();
                         let expiracaoMs = criacaoMs + (d.tempoValidadeMinutos * 60 * 1000);
-                        if (Date.now() > expiracaoMs) {
-                            return; 
-                        }
+                        if (Date.now() > expiracaoMs) return; 
                     }
 
                     if (d.destino === 'todos' || d.destino === usuarioAtual.email) {
@@ -1455,9 +1480,7 @@
 
         async function excluirMeuPedido(id) {
             try {
-                await db.collection('pedidos').doc(id).update({
-                    visivelParaCliente: false
-                });
+                await db.collection('pedidos').doc(id).update({ visivelParaCliente: false });
                 mostrarBannerNotificacao("Pedido removido do seu histórico.");
             } catch (error) {
                 mostrarBannerNotificacao("Erro ao apagar pedido", "#ff4757");
@@ -1468,9 +1491,7 @@
             try {
                 const snapshot = await db.collection('pedidos').where('status', '==', 'Concluído').get();
                 let batch = db.batch();
-                snapshot.forEach(doc => {
-                    batch.delete(doc.ref);
-                });
+                snapshot.forEach(doc => { batch.delete(doc.ref); });
                 await batch.commit();
                 mostrarBannerNotificacao("Caixa zerado para um novo dia!");
             } catch (error) {
@@ -1498,7 +1519,6 @@
         function carregarPedidosCliente() {
             if (!usuarioAtual) return;
             const container = document.getElementById('lista-pedidos-cliente');
-            
             let primeiroCarregamento = true;
 
             db.collection('pedidos').orderBy('data', 'desc').onSnapshot(snapshot => {
@@ -1632,9 +1652,7 @@
                     data: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                await db.collection('pedidos').doc(pedidoConcluidoNaoAvaliadoId).update({
-                    avaliado: true
-                });
+                await db.collection('pedidos').doc(pedidoConcluidoNaoAvaliadoId).update({ avaliado: true });
 
                 falarMensagem("Obrigado pela preferência");
                 mostrarBannerNotificacao("Obrigado pela sua avaliação!");
@@ -1686,11 +1704,7 @@
 
             try {
                 await db.collection('promocoes').add({
-                    destino, 
-                    titulo,
-                    valorDesconto,
-                    tempoValidadeMinutos,
-                    texto,
+                    destino, titulo, valorDesconto, tempoValidadeMinutos, texto,
                     data: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 mostrarBannerNotificacao("Cupom gerado com tempo de expiração e enviado!");
@@ -1748,13 +1762,10 @@
 
                 snapshot.forEach(doc => {
                     let p = doc.data();
-                    
                     if (p.data && p.tempoValidadeMinutos) {
                         let criacaoMs = p.data.toDate().getTime();
                         let expiracaoMs = criacaoMs + (p.tempoValidadeMinutos * 60 * 1000);
-                        if (agoraMs > expiracaoMs) {
-                            return; 
-                        }
+                        if (agoraMs > expiracaoMs) return; 
                     }
 
                     if (p.destino === 'todos' || p.destino === usuarioAtual.email) {
@@ -1772,7 +1783,7 @@
                         <div class="card" style="border-left: 5px solid var(--primary);">
                             <h3>🎁 ${p.titulo} (${p.destino === 'todos' ? 'Geral' : 'Exclusivo para você'})</h3>
                             <p style="margin: 6px 0;">Desconto: <strong>R$ ${(p.valorDesconto || 0).toFixed(2)}</strong></p>
-                            <p style="color: #666; font-size: 0.85rem; margin-bottom: 6px;">⏱️ Válido por ${p.tempoValidadeMinutos || 30} minutos após gerado.</p>
+                            <p style="color: #666; font-size: 0.85rem; margin-bottom: 6px;">⏱️ Válido por ${p.tempoValidadeMinutos || 3} minutos após gerado.</p>
                             <p>${p.texto}</p>
                         </div>
                     `;
