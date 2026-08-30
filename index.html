@@ -352,6 +352,7 @@
 
                 <div id="campos-cadastro" style="display: none;">
                     <input type="text" id="reg-nome" placeholder="Seu Nome Completo">
+                    <input type="text" id="reg-telefone" placeholder="Telefone / WhatsApp (Ex: (85) 99999-9999)">
                     <input type="text" id="reg-endereco" placeholder="Endereço (Rua, Número)">
                     <input type="text" id="reg-bairro" placeholder="Bairro">
                     <input type="text" id="reg-cidade" placeholder="Cidade">
@@ -442,6 +443,9 @@
                     <label style="font-weight: bold; font-size: 0.9rem;">Nome Completo:</label>
                     <input type="text" id="perfil-nome" placeholder="Seu Nome">
 
+                    <label style="font-weight: bold; font-size: 0.9rem;">Telefone / WhatsApp:</label>
+                    <input type="text" id="perfil-telefone" placeholder="Ex: (85) 99999-9999">
+
                     <label style="font-weight: bold; font-size: 0.9rem;">Endereço (Rua e Número):</label>
                     <input type="text" id="perfil-endereco" placeholder="Ex: Rua das Flores, 123">
 
@@ -504,7 +508,10 @@
 
             <!-- Admin: Vitrine -->
             <div id="admin-tab-vitrine" class="admin-tab">
-                <div class="card">
+                <!-- Botão para Abrir/Fechar Formulário de Cadastro de Novo Produto -->
+                <button class="btn-primary" style="background: #2ed573; margin-bottom: 15px;" onclick="toggleFormularioNovoProduto()">➕ Cadastrar Novo Produto</button>
+
+                <div id="container-cadastrar-produto" class="card" style="display: none; border-left: 5px solid #2ed573;">
                     <h3>Cadastrar Produto</h3>
                     <input type="text" id="adm-nome-produto" placeholder="Nome do Produto">
                     <input type="number" id="adm-preco-produto" placeholder="Preço (Ex: 25.00)" step="0.01">
@@ -687,7 +694,7 @@
                     document.getElementById('view-cliente').classList.remove('active');
                     document.getElementById('nav-admin').style.display = 'flex';
                     document.getElementById('nav-cliente').style.display = 'none';
-                    document.getElementById('btn-perfil-topo').style.display = 'none'; // Admin não usa o perfil do cliente no topo
+                    document.getElementById('btn-perfil-topo').style.display = 'none';
                     document.getElementById('app-title').innerText = '🛠️ Painel Admin';
                     mudarAbaAdminSuperior('vitrine');
                     carregarProdutosAdmin();
@@ -872,20 +879,21 @@
             const email = document.getElementById('auth-email').value;
             const senha = document.getElementById('auth-senha').value;
             const nome = document.getElementById('reg-nome').value;
+            const telefone = document.getElementById('reg-telefone').value;
             const endereco = document.getElementById('reg-endereco').value;
             const bairro = document.getElementById('reg-bairro').value;
             const cidade = document.getElementById('reg-cidade').value;
             const referencia = document.getElementById('reg-referencia').value;
 
-            if (!nome || !endereco || !bairro || !cidade) {
-                mostrarBannerNotificacao("Preencha nome, endereço, bairro e cidade.", "#ff4757");
+            if (!nome || !telefone || !endereco || !bairro || !cidade) {
+                mostrarBannerNotificacao("Preencha nome, telefone, endereço, bairro e cidade.", "#ff4757");
                 return;
             }
 
             try {
                 const cred = await auth.createUserWithEmailAndPassword(email, senha);
                 await db.collection('usuarios').doc(cred.user.uid).set({
-                    nome, email, endereco, bairro, cidade, referencia,
+                    nome, telefone, email, endereco, bairro, cidade, referencia,
                     atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 mostrarBannerNotificacao("Conta criada com sucesso!");
@@ -910,16 +918,13 @@
                 .catch(error => mostrarBannerNotificacao("Erro: " + error.message, "#ff4757"));
         }
 
-        // Função do Botão de Perfil no Topo com Toggle (Abre e Fecha) e carregamento automático dos dados
         async function togglePerfilTopo() {
             const tabPerfil = document.getElementById('tab-perfil');
             const estaVisivel = tabPerfil.style.display === 'block';
 
             if (estaVisivel) {
-                // Se já estiver aberto, fecha e volta para a vitrine
                 mudarAbaCliente('vitrine');
             } else {
-                // Se estiver fechado, abre a aba de perfil e carrega as informações do usuário atual
                 mudarAbaCliente('perfil');
                 if (usuarioAtual) {
                     try {
@@ -927,6 +932,7 @@
                         if (doc.exists) {
                             const d = doc.data();
                             document.getElementById('perfil-nome').value = d.nome || '';
+                            document.getElementById('perfil-telefone').value = d.telefone || '';
                             document.getElementById('perfil-endereco').value = d.endereco || '';
                             document.getElementById('perfil-bairro').value = d.bairro || '';
                             document.getElementById('perfil-cidade').value = d.cidade || '';
@@ -940,25 +946,25 @@
         async function salvarPerfilCliente() {
             if (!usuarioAtual) return;
             const nome = document.getElementById('perfil-nome').value;
+            const telefone = document.getElementById('perfil-telefone').value;
             const endereco = document.getElementById('perfil-endereco').value;
             const bairro = document.getElementById('perfil-bairro').value;
             const cidade = document.getElementById('perfil-cidade').value;
             const referencia = document.getElementById('perfil-referencia').value;
 
-            if (!nome || !endereco || !bairro || !cidade) {
-                mostrarBannerNotificacao("Preencha os campos obrigatórios.", "#ff4757");
+            if (!nome || !telefone || !endereco || !bairro || !cidade) {
+                mostrarBannerNotificacao("Preencha os campos obrigatórios, incluindo o telefone.", "#ff4757");
                 return;
             }
 
             try {
                 await db.collection('usuarios').doc(usuarioAtual.uid).set({
-                    nome, email: usuarioAtual.email, endereco, bairro, cidade, referencia,
+                    nome, telefone, email: usuarioAtual.email, endereco, bairro, cidade, referencia,
                     atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
                 
                 await atualizarSaudacaoTopo(usuarioAtual.uid);
                 
-                // Mensagem de sucesso e fechamento automático da tela de perfil ao salvar
                 mostrarBannerNotificacao("Perfil salvo com sucesso!");
                 mudarAbaCliente('vitrine');
             } catch (error) {
@@ -1022,6 +1028,12 @@
                 document.getElementById('admin-tab-mensagens').style.display = 'block';
                 document.getElementById('nav-btn-admin-mensagens').classList.add('active');
             }
+        }
+
+        // Função para abrir e fechar a área de cadastro de novo produto no painel admin
+        function toggleFormularioNovoProduto() {
+            const container = document.getElementById('container-cadastrar-produto');
+            container.style.display = (container.style.display === 'none' || container.style.display === '') ? 'block' : 'none';
         }
 
         function verificarTroco(forma) {
@@ -1093,6 +1105,8 @@
                 document.getElementById('adm-nome-produto').value = '';
                 document.getElementById('adm-preco-produto').value = '';
                 document.getElementById('adm-foto-produto').value = '';
+                // Fecha o formulário automaticamente após cadastrar
+                document.getElementById('container-cadastrar-produto').style.display = 'none';
             } catch (error) {
                 mostrarBannerNotificacao("Erro: " + error.message, "#ff4757");
             }
@@ -1340,7 +1354,7 @@
                 return;
             }
             
-            let dadosCliente = { clienteEmail: usuarioAtual.email, nome: "Cliente", endereco: "Não informado", bairro: "", cidade: "", referencia: "" };
+            let dadosCliente = { clienteEmail: usuarioAtual.email, nome: "Cliente", telefone: "Não informado", endereco: "Não informado", bairro: "", cidade: "", referencia: "" };
             try {
                 const userDoc = await db.collection('usuarios').doc(usuarioAtual.uid).get();
                 if (userDoc.exists) dadosCliente = { ...dadosCliente, ...userDoc.data() };
@@ -1371,6 +1385,7 @@
                 await db.collection('pedidos').add({
                     clienteEmail: usuarioAtual.email,
                     clienteNome: dadosCliente.nome,
+                    clienteTelefone: dadosCliente.telefone,
                     enderecoEntrega: `${dadosCliente.endereco}, Bairro: ${dadosCliente.bairro}, Cidade: ${dadosCliente.cidade}`,
                     referencia: dadosCliente.referencia || 'Nenhuma',
                     itens: carrinho,
@@ -1409,6 +1424,7 @@
                         container.innerHTML += `
                             <div class="card" style="border-left: 5px solid var(--primary);">
                                 <p><strong>Cliente:</strong> ${p.clienteNome || 'Anônimo'} (${p.clienteEmail})</p>
+                                <p><strong>📞 Tel / WhatsApp:</strong> <a href="https://wa.me/55${(p.clienteTelefone || '').replace(/\D/g,'')}" target="_blank" style="color: #2ed573; font-weight: bold; text-decoration: none;">${p.clienteTelefone || 'Não informado'} 💬</a></p>
                                 <p style="background: #f8f9fa; padding: 8px; border-radius: 6px; margin: 6px 0;">
                                     🕒 <strong>Horário:</strong> ${dataFormatada}<br>
                                     📍 <strong>Endereço:</strong> ${p.enderecoEntrega}<br>
