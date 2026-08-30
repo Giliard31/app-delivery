@@ -309,18 +309,17 @@
 
     <div id="notification-banner">🔔 Notificação</div>
 
-    <!-- Modal de Cupom Premiado -->
+    <!-- Modal de Cupom Premiado com Confetes -->
     <div id="modal-cupom-ganho">
         <div class="modal-cupom-content">
             <div style="font-size: 3rem; margin-bottom: 10px;">🎉</div>
             <h2 style="color: var(--primary); margin-bottom: 8px;">Você ganhou um cupom!</h2>
             <p id="texto-modal-cupom" style="color: #57606f; font-size: 0.95rem; margin-bottom: 15px;">Aproveite o desconto especial liberado para você agora.</p>
             <div id="codigo-modal-destaque" style="background: #f1f2f6; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 1.2rem; color: var(--text); margin-bottom: 15px; letter-spacing: 1px;">CUPOM</div>
-            <button class="btn-primary" onclick="fecharModalCupom()">Aproveitar Agora</button>
+            <button class="btn-primary" onclick="copiarCupomEFecharModal()">Aproveitar e Copiar Agora</button>
         </div>
     </div>
 
-    <!-- CABEÇALHO -->
     <header>
         <div class="header-brand">
             <img src="img/icone-192.png" alt="Logo" class="header-logo" id="header-logo-img">
@@ -390,10 +389,11 @@
                     <p>Seu carrinho está vazio.</p>
                 </div>
 
+                <!-- Seção de Cupom -->
                 <div class="card" style="background: #f1f2f6; border-left: 5px solid var(--primary);">
                     <h3 style="font-size: 1rem; margin-bottom: 8px;">🎁 Possui Cupom de Desconto?</h3>
                     <div style="display: flex; gap: 8px;">
-                        <input type="text" id="input-codigo-cupom" placeholder="Digite seu cupom" style="margin:0; text-transform: uppercase;">
+                        <input type="text" id="input-codigo-cupom" placeholder="Digite ou cole seu cupom" style="margin:0; text-transform: uppercase;">
                         <button class="btn-primary" style="margin:0; width: 120px; font-size:0.9rem;" onclick="aplicarCupomCliente()">Aplicar</button>
                     </div>
                     <p id="status-cupom-msg" style="margin-top: 8px; font-size: 0.9rem; font-weight: bold; color: #2ed573; display: none;"></p>
@@ -405,6 +405,7 @@
                     <option value="dinheiro">Dinheiro</option>
                 </select>
 
+                <!-- Bloco dinâmico de troco -->
                 <div id="bloco-troco" class="card" style="display:none; background: #fff3cd; border-left: 5px solid #ffc107; margin-top: 10px;">
                     <label style="font-weight: bold; font-size: 0.95rem;">Vai precisar de troco?</label>
                     <select id="precisa-troco" onchange="alternarCampoTroco(this.value)">
@@ -419,14 +420,6 @@
                 </div>
 
                 <button class="btn-primary" onclick="finalizarPedido()">Finalizar Pedido</button>
-            </div>
-
-            <!-- Aba Cupons e Promoções -->
-            <div id="tab-promocoes" class="cliente-tab" style="display:none;">
-                <h2>Meus Cupons Disponíveis</h2>
-                <div id="lista-promocoes-cliente" style="margin-top: 15px;">
-                    <p style="text-align:center;">Nenhum cupom disponível no momento.</p>
-                </div>
             </div>
 
             <!-- Aba Perfil / Endereço -->
@@ -498,10 +491,10 @@
                 </div>
             </div>
 
-            <!-- Admin: Vitrine (Atualizado com Edição e Exclusão Direta) -->
+            <!-- Admin: Vitrine -->
             <div id="admin-tab-vitrine" class="admin-tab">
                 <div class="card">
-                    <h3>Cadastrar Novo Produto</h3>
+                    <h3>Cadastrar Produto</h3>
                     <input type="text" id="adm-nome-produto" placeholder="Nome do Produto">
                     <input type="number" id="adm-preco-produto" placeholder="Preço (Ex: 25.00)" step="0.01">
                     <input type="url" id="adm-foto-produto" placeholder="Link da Foto (Ex: https://...)" required>
@@ -513,7 +506,7 @@
                     <button class="btn-primary" onclick="cadastrarProduto()">Salvar Produto e Alertar</button>
                 </div>
 
-                <h2>Produtos Cadastrados (Editar ou Excluir)</h2>
+                <h2>Produtos Cadastrados</h2>
                 <div id="lista-produtos-admin" style="margin-top: 15px;">
                     <p style="text-align:center;">Carregando produtos...</p>
                 </div>
@@ -521,13 +514,13 @@
 
             <!-- Admin: Pedidos Ativos -->
             <div id="admin-tab-pedidos" class="admin-tab" style="display:none;">
-                <h2>Pedidos em Curso (Com opção de Edição)</h2>
+                <h2>Pedidos em Curso</h2>
                 <div id="lista-pedidos-admin">
                     <p style="text-align:center;">Nenhum pedido no momento.</p>
                 </div>
             </div>
 
-            <!-- Admin: Caixa / Pedidos Concluídos -->
+            <!-- Admin: Caixa -->
             <div id="admin-tab-caixa" class="admin-tab" style="display:none;">
                 <h2>Controle de Caixa (Concluídos)</h2>
                 <div class="card" style="background: #e8f8f5; border-left: 5px solid #2ed573;">
@@ -548,22 +541,22 @@
                 </div>
             </div>
 
-            <!-- Admin: Cupons e Promoções Direcionadas -->
+            <!-- Admin: Cupons Exclusivos Direcionados -->
             <div id="admin-tab-mensagens" class="admin-tab" style="display:none;">
-                <h2>Criar Cupom / Promoção Direcionada</h2>
+                <h2>Enviar Cupom Exclusivo</h2>
                 <div class="card">
-                    <label style="font-weight: bold;">Enviar Para:</label>
+                    <label style="font-weight: bold;">Enviar Para o Cliente Online:</label>
                     <select id="adm-cupom-destino" style="margin-bottom: 10px;">
                         <option value="todos">🌐 Para Todos os Clientes</option>
                     </select>
 
-                    <input type="text" id="adm-titulo-promo" placeholder="Código do Cupom (Ex: DESCONTO10)" style="text-transform: uppercase;">
+                    <input type="text" id="adm-titulo-promo" placeholder="Código do Cupom (Ex: MEUCLIENTE10)" style="text-transform: uppercase;">
                     <input type="number" id="adm-valor-desconto" placeholder="Valor do Desconto em Reais (Ex: 5.00)" step="0.01">
                     <label style="font-weight: bold; font-size: 0.9rem; margin-top: 5px; display: block;">Validade (Minutos):</label>
                     <input type="number" id="adm-tempo-validade" placeholder="Tempo de validade em min (Ex: 30)" value="30">
                     <textarea id="adm-texto-promo" placeholder="Descrição / Mensagem do cupom..."></textarea>
                     
-                    <button class="btn-primary" onclick="enviarPromocao()">Gerar e Enviar Cupom</button>
+                    <button class="btn-primary" onclick="enviarPromocao()">Gerar e Enviar Cupom com Confetes 🎉</button>
                 </div>
 
                 <h2>Gerenciar Cupons Ativos</h2>
@@ -575,9 +568,8 @@
         </div>
     </main>
 
-    <!-- Menu Inferior do Cliente -->
+    <!-- Menu Inferior do Cliente (Sem a aba de cupons genéricos) -->
     <nav id="nav-cliente" style="display:none;">
-        <button id="nav-btn-promocoes" onclick="mudarAbaCliente('promocoes')">🎁 Cupons</button>
         <button id="nav-btn-perfil" onclick="mudarAbaCliente('perfil')">👤 Perfil</button>
         <button id="nav-btn-perfil-avaliacao" onclick="mudarAbaCliente('perfil-avaliacao')" style="display:none;">⭐ Avaliar</button>
     </nav>
@@ -596,21 +588,13 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').then(reg => {
-                    console.log('Service Worker registrado com sucesso:', reg);
-                }).catch(err => console.log('SW error:', err));
+                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW error:', err));
             });
         }
 
         function solicitarPermissaoNotificacaoAutomatica() {
-            if ('Notification' in window) {
-                if (Notification.permission === 'default') {
-                    Notification.requestPermission().then(permission => {
-                        if (permission === 'granted') {
-                            mostrarBannerNotificacao("Notificações ativadas com sucesso!");
-                        }
-                    });
-                }
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
             }
         }
 
@@ -637,6 +621,7 @@
         let pedidoConcluidoNaoAvaliadoId = null;
         let pingInterval = null;
         let cupomAplicado = null;
+        let ultimoCupomRecebido = "";
 
         async function atualizarSaudacaoTopo(uid) {
             const tituloEl = document.getElementById('app-title');
@@ -647,8 +632,7 @@
             try {
                 const doc = await db.collection('usuarios').doc(uid).get();
                 if (doc.exists && doc.data().nome) {
-                    const nomeCompleto = doc.data().nome.trim();
-                    const primeiroNome = nomeCompleto.split(" ")[0];
+                    const primeiroNome = doc.data().nome.trim().split(" ")[0];
                     tituloEl.innerText = `Olá, ${primeiroNome}!`;
                 } else {
                     tituloEl.innerText = "Olá, Cliente!";
@@ -663,30 +647,14 @@
                 window.speechSynthesis.cancel();
                 let msg = new SpeechSynthesisUtterance(texto);
                 msg.lang = 'pt-BR';
-                msg.rate = 1.0;
-                
-                let vozes = window.speechSynthesis.getVoices();
-                let vozNatural = vozes.find(v => v.lang.includes('pt') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Luciana') || v.name.includes('Microsoft')));
-                if (vozNatural) {
-                    msg.voice = vozNatural;
-                }
-
                 window.speechSynthesis.speak(msg);
             }
-        }
-
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
         }
 
         function dispararPushNativo(titulo, corpo) {
             if ('Notification' in window && Notification.permission === 'granted') {
                 navigator.serviceWorker.ready.then(registration => {
-                    registration.showNotification(titulo, {
-                        body: corpo,
-                        icon: 'img/icone-192.png',
-                        vibrate: [200, 100, 200]
-                    });
+                    registration.showNotification(titulo, { body: corpo, icon: 'img/icone-192.png' });
                 });
             }
         }
@@ -722,11 +690,8 @@
                     document.getElementById('nav-admin').style.display = 'none';
                     
                     await atualizarSaudacaoTopo(user.uid);
-
                     carregarProdutosCliente();
-                    carregarPromocoesCliente();
                     carregarPedidosCliente();
-                    carregarPerfilCliente();
                     ouvirNotificacoesNovosPratos();
                     ouvirCuponsNovosCliente();
                 }
@@ -743,19 +708,14 @@
             }
         });
 
-        window.addEventListener('click', () => {
-            solicitarPermissaoNotificacaoAutomatica();
-        }, { once: true });
+        window.addEventListener('click', () => { solicitarPermissaoNotificacaoAutomatica(); }, { once: true });
 
         function iniciarPresencaOnline() {
             if (!usuarioAtual) return;
             const userRef = db.collection('presenca').doc(usuarioAtual.uid);
             async function atualizarPing() {
                 try {
-                    await userRef.set({
-                        email: usuarioAtual.email,
-                        ultimaVez: firebase.firestore.FieldValue.serverTimestamp()
-                    });
+                    await userRef.set({ email: usuarioAtual.email, ultimaVez: firebase.firestore.FieldValue.serverTimestamp() });
                 } catch(e) {}
             }
             atualizarPing();
@@ -792,9 +752,9 @@
                         if ((agora - tempoConexao) < 45000) {
                             contadorAtivos++;
                             listaHtml += `
-                                <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 6px 10px; border-radius: 6px; margin-bottom: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 6px 10px; border-radius: 6px; margin-bottom: 4px;">
                                     <span style="font-size: 0.85rem; color: #2f3542;">🟢 ${dados.email}</span>
-                                    <button class="btn-primary" style="margin:0; padding: 4px 8px; font-size: 0.75rem; width: auto;" onclick="selecionarEmailOnline('${dados.email}')">Enviar Cupom</button>
+                                    <button class="btn-primary" style="margin:0; padding: 4px 8px; font-size: 0.75rem; width: auto;" onclick="selecionarEmailOnline('${dados.email}')">Selecionar</button>
                                 </div>
                             `;
                         }
@@ -802,8 +762,7 @@
                 });
 
                 document.getElementById('contador-online').innerText = contadorAtivos > 0 ? contadorAtivos : 1;
-                const detalhesEl = document.getElementById('detalhes-emails-online');
-                detalhesEl.innerHTML = listaHtml !== '' ? listaHtml : `<p style="font-size: 0.85rem; color: #57606f;">Nenhum outro usuário online.</p>`;
+                document.getElementById('detalhes-emails-online').innerHTML = listaHtml !== '' ? listaHtml : `<p style="font-size: 0.85rem; color: #57606f;">Nenhum outro usuário online.</p>`;
             });
         }
 
@@ -817,21 +776,32 @@
 
         function dispararChuvaConfetes() {
             if (typeof confetti === 'function') {
-                confetti({ particleCount: 120, spread: 80, origin: { y: 0.5 } });
+                confetti({ particleCount: 150, spread: 90, origin: { y: 0.5 } });
             }
         }
 
         function exibirModalCupomGanho(codigo, textoDescricao) {
+            ultimoCupomRecebido = codigo;
             document.getElementById('codigo-modal-destaque').innerText = codigo;
             document.getElementById('texto-modal-cupom').innerText = textoDescricao || "Aproveite o desconto especial liberado para você.";
             document.getElementById('modal-cupom-ganho').style.display = 'flex';
             dispararChuvaConfetes();
-            falarMensagem("Você ganhou um cupom. Aproveite!");
+            falarMensagem("Você ganhou um cupom exclusivo!");
             dispararPushNativo("🎁 Cupom Liberado!", `Você ganhou o cupom ${codigo}. Aproveite!`);
         }
 
-        function fecharModalCupom() {
+        function copiarCupomEFecharModal() {
             document.getElementById('modal-cupom-ganho').style.display = 'none';
+            if (ultimoCupomRecebido) {
+                navigator.clipboard.writeText(ultimoCupomRecebido).then(() => {
+                    mostrarBannerNotificacao("Cupom copiado para a área de transferência!");
+                }).catch(() => {});
+                
+                // Vai direto pra tela do carrinho e cola no input
+                mudarAbaCliente('carrinho');
+                document.getElementById('input-codigo-cupom').value = ultimoCupomRecebido;
+                aplicarCupomCliente();
+            }
         }
 
         function ouvirCuponsNovosCliente() {
@@ -880,8 +850,7 @@
         function fazerLogin() {
             const email = document.getElementById('auth-email').value;
             const senha = document.getElementById('auth-senha').value;
-            auth.signInWithEmailAndPassword(email, senha)
-                .catch(error => mostrarBannerNotificacao("Erro ao entrar: " + error.message, "#ff4757"));
+            auth.signInWithEmailAndPassword(email, senha).catch(error => mostrarBannerNotificacao("Erro ao entrar: " + error.message, "#ff4757"));
         }
 
         async function fazerCadastro() {
@@ -961,7 +930,6 @@
                 }, { merge: true });
                 
                 await atualizarSaudacaoTopo(usuarioAtual.uid);
-
                 mostrarBannerNotificacao("Perfil atualizado com sucesso!");
             } catch (error) {
                 mostrarBannerNotificacao("Erro ao atualizar: " + error.message, "#ff4757");
@@ -993,8 +961,6 @@
             document.getElementById('btn-admin-sub-vitrine').classList.remove('active');
             document.getElementById('btn-admin-sub-pedidos').classList.remove('active');
             document.getElementById('btn-admin-sub-caixa').classList.remove('active');
-            document.getElementById('nav-btn-admin-avaliacoes').classList.remove('active');
-            document.getElementById('nav-btn-admin-mensagens').classList.remove('active');
 
             if (aba === 'vitrine') {
                 document.getElementById('admin-tab-vitrine').style.display = 'block';
@@ -1015,9 +981,6 @@
             document.getElementById('admin-tab-avaliacoes').style.display = 'none';
             document.getElementById('admin-tab-mensagens').style.display = 'none';
 
-            document.getElementById('btn-admin-sub-vitrine').classList.remove('active');
-            document.getElementById('btn-admin-sub-pedidos').classList.remove('active');
-            document.getElementById('btn-admin-sub-caixa').classList.remove('active');
             document.getElementById('nav-btn-admin-avaliacoes').classList.remove('active');
             document.getElementById('nav-btn-admin-mensagens').classList.remove('active');
 
@@ -1033,10 +996,6 @@
         function verificarTroco(forma) {
             const blocoTroco = document.getElementById('bloco-troco');
             blocoTroco.style.display = (forma === 'dinheiro') ? 'block' : 'none';
-            if (forma !== 'dinheiro') {
-                document.getElementById('precisa-troco').value = 'nao';
-                document.getElementById('campo-valor-troco').style.display = 'none';
-            }
         }
 
         function alternarCampoTroco(resp) {
@@ -1046,14 +1005,10 @@
         function ouvirNotificacoesNovosPratos() {
             let primeiraVez = true;
             db.collection('produtos').orderBy('criadoEm', 'desc').limit(1).onSnapshot(snapshot => {
-                if (primeiraVez) {
-                    primeiraVez = false;
-                    return; 
-                }
+                if (primeiraVez) { primeiraVez = false; return; }
                 snapshot.docChanges().forEach(change => {
                     if (change.type === 'added') {
                         mostrarBannerNotificacao("🔔 Novo prato adicionado ao cardápio!");
-                        dispararPushNativo("Cardápio Atualizado", "Novo prato adicionado!");
                     }
                 });
             });
@@ -1062,10 +1017,7 @@
         function ouvirPedidosNovosAdmin() {
             let primeiraVez = true;
             db.collection('pedidos').orderBy('data', 'desc').limit(1).onSnapshot(snapshot => {
-                if (primeiraVez) {
-                    primeiraVez = false;
-                    return;
-                }
+                if (primeiraVez) { primeiraVez = false; return; }
                 snapshot.docChanges().forEach(change => {
                     if (change.type === 'added') {
                         falarMensagem("Novo pedido recebido!");
@@ -1123,37 +1075,26 @@
             }
         }
 
-        // Função para excluir um produto definitivamente do banco de dados (Admin)
-        async function excluirProdutoAdmin(id) {
-            if (confirm("Tem certeza que deseja excluir permanentemente este produto?")) {
-                try {
-                    await db.collection('produtos').doc(id).delete();
-                    mostrarBannerNotificacao("Produto excluído com sucesso!");
-                } catch (error) {
-                    mostrarBannerNotificacao("Erro ao excluir produto", "#ff4757");
-                }
-            }
+        // Funções para alternar o Modo de Edição no Painel Admin (Interface limpa)
+        function toggleModoEdicaoAdmin(id) {
+            const divEdit = document.getElementById('edit-fields-' + id);
+            divEdit.style.display = (divEdit.style.display === 'none' || divEdit.style.display === '') ? 'block' : 'none';
         }
 
-        // Função para salvar alterações feitas em um produto já existente (Nome, Preço, Foto)
-        async function salvarEdicaoProdutoAdmin(id) {
-            const novoNome = document.getElementById(`adm-edit-nome-${id}`).value;
-            const novoPreco = parseFloat(document.getElementById(`adm-edit-preco-${id}`).value);
-            const novaFoto = document.getElementById(`adm-edit-foto-${id}`).value;
+        async function salvarEdicaoProduto(id) {
+            const nome = document.getElementById('edit-nome-' + id).value;
+            const preco = parseFloat(document.getElementById('edit-preco-' + id).value);
+            const fotoUrl = document.getElementById('edit-foto-' + id).value;
 
-            if (!novoNome || isNaN(novoPreco) || !novaFoto) {
-                mostrarBannerNotificacao("Preencha corretamente os campos do produto.", "#ff4757");
+            if (!nome || isNaN(preco) || !fotoUrl) {
+                mostrarBannerNotificacao("Preencha todos os campos para salvar.", "#ff4757");
                 return;
             }
 
             try {
-                await db.collection('produtos').doc(id).update({
-                    nome: novoNome,
-                    preco: novoPreco,
-                    fotoUrl: novaFoto
-                });
+                await db.collection('produtos').doc(id).update({ nome, preco, fotoUrl });
                 mostrarBannerNotificacao("Produto atualizado com sucesso!");
-            } catch (error) {
+            } catch (e) {
                 mostrarBannerNotificacao("Erro ao atualizar produto", "#ff4757");
             }
         }
@@ -1190,7 +1131,7 @@
             });
         }
 
-        // Listagem do Admin atualizada com inputs editáveis, botão de salvar alteração, alternar status e excluir produto de vez
+        // CARREGAMENTO DO ADMIN COM A INTERFACE LIMPA (BOTÃO EDITAR / BOTÃO SALVAR)
         function carregarProdutosAdmin() {
             const container = document.getElementById('lista-produtos-admin');
             db.collection('produtos').onSnapshot(snapshot => {
@@ -1203,28 +1144,39 @@
                     const p = doc.data();
                     const id = doc.id;
                     const isDisp = p.status === 'disponivel';
-                    
+
                     container.innerHTML += `
-                        <div class="card" style="border-left: 5px solid ${isDisp ? '#2ed573' : '#ffa502'}; margin-bottom: 15px;">
-                            <img src="${p.fotoUrl}" alt="${p.nome}" style="width: 100%; height: 140px; object-fit: cover; border-radius: 8px; margin-bottom: 10px;">
+                        <div class="produto-card">
+                            <img src="${p.fotoUrl}" alt="${p.nome}">
+                            <h3>${p.nome}</h3>
+                            <p style="color: #2ed573; font-weight: bold; margin: 8px 0;">R$ ${p.preco.toFixed(2)}</p>
                             
-                            <label style="font-size: 0.85rem; font-weight: bold; color: #666;">Nome do Produto:</label>
-                            <input type="text" id="adm-edit-nome-${id}" value="${p.nome}" style="margin: 4px 0 10px 0;">
-
-                            <label style="font-size: 0.85rem; font-weight: bold; color: #666;">Preço (R$):</label>
-                            <input type="number" id="adm-edit-preco-${id}" value="${p.preco.toFixed(2)}" step="0.01" style="margin: 4px 0 10px 0;">
-
-                            <label style="font-size: 0.85rem; font-weight: bold; color: #666;">Link da Foto:</label>
-                            <input type="url" id="adm-edit-foto-${id}" value="${p.fotoUrl}" style="margin: 4px 0 10px 0;">
-
-                            <div style="display: flex; gap: 8px; margin-top: 5px;">
-                                <button class="btn-primary" style="background: #3742fa; margin:0; font-size: 0.9rem; flex: 1;" onclick="salvarEdicaoProdutoAdmin('${id}')">💾 Salvar Alterações</button>
-                                <button class="btn-primary" style="background: ${isDisp ? '#ffa502' : '#2ed573'}; margin:0; font-size: 0.9rem; flex: 1;" onclick="alterarStatusProduto('${id}', '${isDisp ? 'indisponivel' : 'disponivel'}')">
-                                    ${isDisp ? '🔴 Ocultar' : '🟢 Exibir'}
+                            <!-- Botões de Ação Rápida: Ocultar/Exibir e Disponível/Indisponível -->
+                            <div style="display: flex; gap: 6px; justify-content: center; margin-top: 10px;">
+                                <button class="btn-primary" style="background: ${isDisp ? '#2ed573' : '#ffa502'}; font-size: 0.8rem; padding: 6px; margin:0;" onclick="alterarStatusProduto('${id}', '${isDisp ? 'indisponivel' : 'disponivel'}')">
+                                    ${isDisp ? '🟢 Disponível' : '🔴 Oculto'}
+                                </button>
+                                <button class="btn-primary" style="background: #3742fa; font-size: 0.8rem; padding: 6px; margin:0; width: auto;" onclick="toggleModoEdicaoAdmin('${id}')">
+                                    ✏️ Editar
                                 </button>
                             </div>
 
-                            <button class="btn-primary" style="background: #ff4757; margin-top: 8px; font-size: 0.9rem;" onclick="excluirProdutoAdmin('${id}')">🗑️ Excluir Definitivamente</button>
+                            <!-- Campos de Edição Ocultos até clicar no botão Editar -->
+                            <div id="edit-fields-${id}" style="display: none; margin-top: 12px; border-top: 1px solid #eee; padding-top: 10px; text-align: left;">
+                                <label style="font-size: 0.8rem; font-weight: bold;">Nome:</label>
+                                <input type="text" id="edit-nome-${id}" value="${p.nome}" style="margin: 4px 0 8px 0; padding: 8px; font-size: 0.9rem;">
+                                
+                                <label style="font-size: 0.8rem; font-weight: bold;">Preço (R$):</label>
+                                <input type="number" id="edit-preco-${id}" value="${p.preco}" step="0.01" style="margin: 4px 0 8px 0; padding: 8px; font-size: 0.9rem;">
+                                
+                                <label style="font-size: 0.8rem; font-weight: bold;">Link Foto:</label>
+                                <input type="url" id="edit-foto-${id}" value="${p.fotoUrl}" style="margin: 4px 0 8px 0; padding: 8px; font-size: 0.9rem;">
+
+                                <!-- Botão Salvar visível apenas no modo de edição -->
+                                <button class="btn-primary" style="background: #2ed573; font-size: 0.9rem; padding: 10px; margin-top: 5px;" onclick="salvarEdicaoProduto('${id}')">
+                                    💾 Salvar Alterações
+                                </button>
+                            </div>
                         </div>
                     `;
                 });
@@ -1265,7 +1217,6 @@
                 container.innerHTML = `<p>Seu carrinho está vazio.</p>`;
                 cupomAplicado = null;
                 document.getElementById('status-cupom-msg').style.display = 'none';
-                document.getElementById('input-codigo-cupom').value = '';
                 return;
             }
 
@@ -1328,11 +1279,9 @@
                 snapshot.forEach(doc => {
                     let d = doc.data();
                     if (d.data && d.tempoValidadeMinutos) {
-                        let criacaoMs = d.data.toDate().getTime();
-                        let expiracaoMs = criacaoMs + (d.tempoValidadeMinutos * 60 * 1000);
+                        let expiracaoMs = d.data.toDate().getTime() + (d.tempoValidadeMinutos * 60 * 1000);
                         if (Date.now() > expiracaoMs) return; 
                     }
-
                     if (d.destino === 'todos' || d.destino === usuarioAtual.email) {
                         cupomValido = d;
                     }
@@ -1341,17 +1290,13 @@
                 if (!cupomValido) {
                     msgEl.style.display = 'block';
                     msgEl.style.color = '#ff4757';
-                    msgEl.innerText = "Este cupom expirou ou não é válido para a sua conta.";
+                    msgEl.innerText = "Este cupom expirou ou não pertence à sua conta.";
                     cupomAplicado = null;
                     atualizarVisualCarrinho();
                     return;
                 }
 
-                cupomAplicado = {
-                    codigo: cupomValido.titulo,
-                    desconto: parseFloat(cupomValido.valorDesconto) || 0
-                };
-
+                cupomAplicado = { codigo: cupomValido.titulo, desconto: parseFloat(cupomValido.valorDesconto) || 0 };
                 msgEl.style.display = 'block';
                 msgEl.style.color = '#2ed573';
                 msgEl.innerText = `Cupom aplicado! Desconto de R$ ${cupomAplicado.desconto.toFixed(2)}`;
@@ -1372,9 +1317,7 @@
             let dadosCliente = { clienteEmail: usuarioAtual.email, nome: "Cliente", endereco: "Não informado", bairro: "", cidade: "", referencia: "" };
             try {
                 const userDoc = await db.collection('usuarios').doc(usuarioAtual.uid).get();
-                if (userDoc.exists) {
-                    dadosCliente = { ...dadosCliente, ...userDoc.data() };
-                }
+                if (userDoc.exists) dadosCliente = { ...dadosCliente, ...userDoc.data() };
             } catch (e) {}
 
             const pagamento = document.getElementById('forma-pagamento').value;
@@ -1418,7 +1361,6 @@
                 carrinho = [];
                 cupomAplicado = null;
                 atualizarVisualCarrinho();
-                carregarProdutosCliente(); 
                 mudarAbaCliente('pedidos-cliente');
             } catch (error) {
                 mostrarBannerNotificacao("Erro ao enviar pedido: " + error.message, "#ff4757");
@@ -1433,206 +1375,89 @@
                 snapshot.forEach(doc => {
                     const p = doc.data();
                     const id = doc.id;
-                    
                     if (p.status !== 'Concluído') {
                         temAtivos = true;
+                        let itensHtml = p.itens ? p.itens.map(i => `${i.name} (x${i.quantidade})`).join(', ') : '';
                         let dataFormatada = p.data && p.data.toDate ? p.data.toDate().toLocaleString('pt-BR') : 'Horário não registrado';
-
-                        let itensEdicaoHtml = '';
-                        if (p.itens && p.itens.length > 0) {
-                            p.itens.forEach((item, itemIndex) => {
-                                itensEdicaoHtml += `
-                                    <tr style="border-bottom: 1px solid #ddd; font-size: 0.9rem;">
-                                        <td style="padding: 6px;">${item.name}</td>
-                                        <td style="padding: 6px;"><input type="number" id="adm-item-qtd-${id}-${itemIndex}" value="${item.quantidade}" min="1" style="width: 60px; padding: 4px; text-align: center;" onchange="recalcularTotalAdmin('${id}')"></td>
-                                        <td style="padding: 6px;"><input type="number" id="adm-item-preco-${id}-${itemIndex}" value="${item.price.toFixed(2)}" step="0.01" style="width: 80px; padding: 4px; text-align: right;" onchange="recalcularTotalAdmin('${id}')"></td>
-                                    </tr>
-                                `;
-                            });
-                        }
 
                         container.innerHTML += `
                             <div class="card" style="border-left: 5px solid var(--primary);">
                                 <p><strong>Cliente:</strong> ${p.clienteNome || 'Anônimo'} (${p.clienteEmail})</p>
                                 <p style="background: #f8f9fa; padding: 8px; border-radius: 6px; margin: 6px 0;">
                                     🕒 <strong>Horário:</strong> ${dataFormatada}<br>
-                                    📍 <strong>Endereço:</strong> ${p.enderecoEntrega || 'Não informado'}<br>
-                                    🗺️ <strong>Referência:</strong> ${p.referencia || 'Nenhuma'}
+                                    📍 <strong>Endereço:</strong> ${p.enderecoEntrega}<br>
+                                    🗺️ <strong>Referência:</strong> ${p.referencia}
                                 </p>
-                                
-                                <p style="margin-top: 10px; font-weight: bold;">Gerenciar / Editar Itens do Pedido:</p>
-                                <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
-                                    <thead>
-                                        <tr style="text-align: left; font-size: 0.85rem; color: #666; border-bottom: 2px solid #ddd;">
-                                            <th style="padding: 4px;">Produto</th>
-                                            <th style="padding: 4px;">Qtd</th>
-                                            <th style="padding: 4px;">Preço Unit. (R$)</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="adm-tabela-itens-${id}">
-                                        ${itensEdicaoHtml}
-                                    </tbody>
-                                </table>
-
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: #f1f2f6; padding: 8px; border-radius: 6px;">
-                                    <span><strong>Valor Total Editável:</strong></span>
-                                    <input type="number" id="adm-valortotal-${id}" value="${(p.valorTotal || 0).toFixed(2)}" step="0.01" style="width: 110px; padding: 6px; text-align: right; font-weight: bold; color: var(--success); margin: 0;">
-                                </div>
-
-                                <p><strong>Pagamento:</strong> ${p.pagamento || ''} | <strong>Troco:</strong> ${p.detalheTroco || 'Não informado'}</p>
-                                <p><strong>Status Atual:</strong> <span style="color: #ff4757; font-weight: bold;">${p.status}</span></p>
+                                <p><strong>Itens:</strong> ${itensHtml}</p>
+                                ${p.cupomUsado ? `<p><strong>Cupom:</strong> ${p.cupomUsado}</p>` : ''}
+                                <p><strong>Pagamento:</strong> ${p.pagamento} | <strong style="color:var(--success);">R$ ${(p.valorTotal || 0).toFixed(2)}</strong></p>
+                                <p><strong>Troco:</strong> ${p.detalheTroco}</p>
+                                <p><strong>Status:</strong> <span style="color: #ff4757; font-weight: bold;">${p.status}</span></p>
                                 
                                 <div style="margin-top: 12px; border-top: 1px solid #eee; padding-top: 10px;">
-                                    <button class="btn-primary" style="background: #3742fa; margin-bottom: 5px;" onclick="salvarEdicaoPedidoAdmin('${id}', ${p.itens ? p.itens.length : 0})">💾 Salvar Alterações de Valores/Itens</button>
-                                    
-                                    <input type="number" id="tempo-${id}" placeholder="Minutos para entrega" style="margin-bottom: 5px; margin-top: 8px;" value="${p.tempoMinutos || 15}">
-                                    <button class="btn-primary" style="background:#ffa502; margin-bottom: 5px;" onclick="atualizarStatusPedido('${id}', 'Em Preparo')">👨‍🍳 Em Preparo (Definir Tempo)</button>
+                                    <input type="number" id="tempo-${id}" placeholder="Minutos para entrega" style="margin-bottom: 5px;" value="${p.tempoMinutos || 15}">
+                                    <button class="btn-primary" style="background:#ffa502; margin-bottom: 5px;" onclick="atualizarStatusPedido('${id}', 'Em Preparo')">👨‍🍳 Em Preparo</button>
                                     <button class="btn-primary" style="background:#2ed573; margin-bottom: 5px;" onclick="atualizarStatusPedido('${id}', 'Saiu para Entrega')">🛵 Saiu para Entrega</button>
-                                    <button class="btn-primary" style="background:#3742fa;" onclick="atualizarStatusPedido('${id}', 'Concluído')">✅ Concluído (Enviar para o Caixa)</button>
+                                    <button class="btn-primary" style="background:#3742fa;" onclick="atualizarStatusPedido('${id}', 'Concluído')">✅ Concluído</button>
                                 </div>
                             </div>
                         `;
                     }
                 });
-                if (!temAtivos) {
-                    container.innerHTML = `<p style="text-align:center;">Nenhum pedido em curso no momento.</p>`;
-                }
+                if (!temAtivos) container.innerHTML = `<p style="text-align:center;">Nenhum pedido em curso no momento.</p>`;
             });
-        }
-
-        function recalcularTotalAdmin(idPedido) {
-            const tabela = document.getElementById(`adm-tabela-itens-${idPedido}`);
-            if (!tabela) return;
-            
-            let novoTotal = 0;
-            let linhas = tabela.querySelectorAll('tr');
-            linhas.forEach((_, index) => {
-                const inputQtd = document.getElementById(`adm-item-qtd-${idPedido}-${index}`);
-                const inputPreco = document.getElementById(`adm-item-preco-${idPedido}-${index}`);
-                if (inputQtd && inputPreco) {
-                    let qtd = parseInt(inputQtd.value) || 0;
-                    let preco = parseFloat(inputPreco.value) || 0;
-                    novoTotal += (qtd * preco);
-                }
-            });
-
-            const inputTotalFinal = document.getElementById(`adm-valortotal-${idPedido}`);
-            if (inputTotalFinal) {
-                inputTotalFinal.value = novoTotal.toFixed(2);
-            }
-        }
-
-        async function salvarEdicaoPedidoAdmin(idPedido, totalItens) {
-            let novosItens = [];
-            let novoValorTotal = parseFloat(document.getElementById(`adm-valortotal-${idPedido}`).value) || 0;
-
-            for (let i = 0; i < totalItens; i++) {
-                const inputQtd = document.getElementById(`adm-item-qtd-${idPedido}-${i}`);
-                const inputPreco = document.getElementById(`adm-item-preco-${idPedido}-${i}`);
-                
-                if (inputQtd && inputPreco) {
-                    let nomeItem = inputQtd.closest('tr').cells[0].innerText;
-                    novosItens.push({
-                        name: nomeItem,
-                        quantidade: parseInt(inputQtd.value) || 1,
-                        price: parseFloat(inputPreco.value) || 0
-                    });
-                }
-            }
-
-            try {
-                await db.collection('pedidos').doc(idPedido).update({
-                    itens: novosItens,
-                    valorTotal: novoValorTotal
-                });
-                mostrarBannerNotificacao("Alterações salvas com sucesso no pedido!");
-            } catch (error) {
-                mostrarBannerNotificacao("Erro ao salvar alterações: " + error.message, "#ff4757");
-            }
         }
 
         function carregarCaixaAdmin() {
             const container = document.getElementById('lista-pedidos-caixa');
             const elementoTotal = document.getElementById('valor-total-caixa');
-
             db.collection('pedidos').orderBy('data', 'desc').onSnapshot(snapshot => {
                 container.innerHTML = '';
                 let faturamentoTotal = 0;
-                let quantidadeConcluidos = 0;
-
+                let qtde = 0;
                 snapshot.forEach(doc => {
                     const p = doc.data();
-                    const id = doc.id;
-
                     if (p.status === 'Concluído') {
-                        quantidadeConcluidos++;
+                        qtde++;
                         faturamentoTotal += (p.valorTotal || 0);
                         let itensHtml = p.itens ? p.itens.map(i => `${i.name} (x${i.quantidade})`).join(', ') : '';
-
                         container.innerHTML += `
                             <div class="card" style="border-left: 5px solid #2ed573;">
-                                <p><strong>Cliente:</strong> ${p.clienteNome || 'Anônimo'}</p>
+                                <p><strong>Cliente:</strong> ${p.clienteNome}</p>
                                 <p><strong>Itens:</strong> ${itensHtml}</p>
-                                <p><strong>Valor:</strong> <span style="color:var(--success); font-weight:bold;">R$ ${(p.valorTotal || 0).toFixed(2)}</span> (${p.pagamento || ''})</p>
-                                <button class="btn-primary" style="background: #ff4757; font-size: 0.85rem; padding: 8px; margin-top: 10px;" onclick="excluirPedidoCaixa('${id}')">🗑️ Apagar este registro</button>
+                                <p><strong>Valor:</strong> <span style="color:var(--success); font-weight:bold;">R$ ${(p.valorTotal || 0).toFixed(2)}</span></p>
+                                <button class="btn-primary" style="background: #ff4757; font-size: 0.85rem; padding: 8px; margin-top: 10px;" onclick="excluirPedidoCaixa('${doc.id}')">🗑️ Apagar</button>
                             </div>
                         `;
                     }
                 });
-
                 elementoTotal.innerText = `R$ ${faturamentoTotal.toFixed(2)}`;
-
-                if (quantidadeConcluidos === 0) {
-                    container.innerHTML = `<p style="text-align:center;">Nenhum pedido concluído registrado hoje.</p>`;
-                }
+                if (qtde === 0) container.innerHTML = `<p style="text-align:center;">Nenhum pedido concluído hoje.</p>`;
             });
         }
 
         async function excluirPedidoCaixa(id) {
-            try {
-                await db.collection('pedidos').doc(id).delete();
-                mostrarBannerNotificacao("Registro apagado do caixa.");
-            } catch (error) {
-                mostrarBannerNotificacao("Erro ao apagar pedido", "#ff4757");
-            }
+            await db.collection('pedidos').doc(id).delete();
+            mostrarBannerNotificacao("Registro apagado do caixa.");
         }
 
         async function excluirMeuPedido(id) {
-            try {
-                await db.collection('pedidos').doc(id).update({ visivelParaCliente: false });
-                mostrarBannerNotificacao("Pedido removido do seu histórico.");
-            } catch (error) {
-                mostrarBannerNotificacao("Erro ao apagar pedido", "#ff4757");
-            }
+            await db.collection('pedidos').doc(id).update({ visivelParaCliente: false });
+            mostrarBannerNotificacao("Pedido removido do histórico.");
         }
 
         async function zerarCaixaDiario() {
-            try {
-                const snapshot = await db.collection('pedidos').where('status', '==', 'Concluído').get();
-                let batch = db.batch();
-                snapshot.forEach(doc => { batch.delete(doc.ref); });
-                await batch.commit();
-                mostrarBannerNotificacao("Caixa zerado para um novo dia!");
-            } catch (error) {
-                mostrarBannerNotificacao("Erro ao zerar caixa", "#ff4757");
-            }
+            const snapshot = await db.collection('pedidos').where('status', '==', 'Concluído').get();
+            let batch = db.batch();
+            snapshot.forEach(doc => { batch.delete(doc.ref); });
+            await batch.commit();
+            mostrarBannerNotificacao("Caixa zerado!");
         }
 
         async function atualizarStatusPedido(id, novoStatus) {
-            let tempoMinutos = 0;
-            if (novoStatus === 'Em Preparo') {
-                const inputTempo = document.getElementById('tempo-' + id).value;
-                tempoMinutos = parseInt(inputTempo) || 15;
-            }
-            try {
-                await db.collection('pedidos').doc(id).update({
-                    status: novoStatus,
-                    tempoMinutos: tempoMinutos
-                });
-                mostrarBannerNotificacao("Status alterado para: " + novoStatus);
-            } catch (error) {
-                mostrarBannerNotificacao("Erro ao atualizar status", "#ff4757");
-            }
+            let tempoMinutos = novoStatus === 'Em Preparo' ? (parseInt(document.getElementById('tempo-' + id).value) || 15) : 0;
+            await db.collection('pedidos').doc(id).update({ status: novoStatus, tempoMinutos });
+            mostrarBannerNotificacao("Status alterado para: " + novoStatus);
         }
 
         function carregarPedidosCliente() {
@@ -1649,20 +1474,14 @@
                     if (!primeiroCarregamento && change.type === 'modified') {
                         let pedidoAlt = change.doc.data();
                         if (pedidoAlt.clienteEmail === usuarioAtual.email) {
-                            if (pedidoAlt.status === 'Em Preparo') {
-                                falarMensagem("Pedido em preparo");
-                                dispararPushNativo("Pedido Atualizado", "Seu pedido está em preparo!");
-                            } else if (pedidoAlt.status === 'Saiu para Entrega') {
+                            if (pedidoAlt.status === 'Em Preparo') falarMensagem("Pedido em preparo");
+                            else if (pedidoAlt.status === 'Saiu para Entrega') {
                                 falarMensagem("Saindo para a entrega, chego já");
                                 dispararPushNativo("Saiu para Entrega! 🛵", "Saindo para a entrega, chego já.");
-                            } else if (pedidoAlt.status === 'Concluído') {
-                                falarMensagem("Avalie o nosso atendimento");
-                                dispararPushNativo("Pedido Concluído", "Avalie o nosso atendimento.");
-                            }
+                            } else if (pedidoAlt.status === 'Concluído') falarMensagem("Avalie o nosso atendimento");
                         }
                     }
                 });
-
                 primeiroCarregamento = false;
 
                 snapshot.forEach(doc => {
@@ -1677,13 +1496,10 @@
                 });
 
                 const btnNavAvaliar = document.getElementById('nav-btn-perfil-avaliacao');
-                if (temConcluidoNaoAvaliado) {
-                    btnNavAvaliar.style.display = 'flex';
-                } else {
+                if (temConcluidoNaoAvaliado) btnNavAvaliar.style.display = 'flex';
+                else {
                     btnNavAvaliar.style.display = 'none';
-                    if (document.getElementById('tab-perfil-avaliacao').style.display === 'block') {
-                        mudarAbaCliente('vitrine');
-                    }
+                    if (document.getElementById('tab-perfil-avaliacao').style.display === 'block') mudarAbaCliente('vitrine');
                 }
 
                 if (meusPedidos.length === 0) {
@@ -1695,41 +1511,23 @@
                 timerIntervalos = {};
 
                 meusPedidos.forEach(pedido => {
-                    const id = pedido.id;
                     let itensHtml = pedido.itens ? pedido.itens.map(i => `${i.name} (x${i.quantidade})`).join(', ') : '';
                     let statusHtml = '';
                     let botaoExcluirHtml = '';
 
                     if (pedido.status === 'Concluído') {
                         statusHtml = `<div style="background:#e3f2fd; padding: 10px; border-radius: 8px; text-align:center; margin-top: 10px;"><p>🎉 <strong>Pedido Concluído!</strong></p></div>`;
-                        botaoExcluirHtml = `<button class="btn-primary" style="background: #ff4757; font-size: 0.85rem; padding: 8px; margin-top: 10px;" onclick="excluirMeuPedido('${id}')">🗑️ Apagar do meu histórico</button>`;
+                        botaoExcluirHtml = `<button class="btn-primary" style="background: #ff4757; font-size: 0.85rem; padding: 8px; margin-top: 10px;" onclick="excluirMeuPedido('${pedido.id}')">🗑️ Apagar histórico</button>`;
                     } else if (pedido.status === 'Saiu para Entrega') {
-                        statusHtml = `
-                            <div style="background:#e8f8f5; border-left: 5px solid #2ed573; padding: 10px; border-radius: 8px; text-align:center; margin-top: 10px;">
-                                <p><strong>Status:</strong> <span style="color:#2ed573; font-weight:bold;">Saiu para Entrega! 🛵</span></p>
-                                <div style="margin: 10px 0; overflow: hidden;"><span class="animacao-entrega">🛵💨 🏠</span></div>
-                            </div>
-                        `;
+                        statusHtml = `<div style="background:#e8f8f5; border-left: 5px solid #2ed573; padding: 10px; border-radius: 8px; text-align:center; margin-top: 10px;"><p><strong>Saiu para Entrega! 🛵</strong></p><div style="margin: 10px 0;"><span class="animacao-entrega">🛵💨 🏠</span></div></div>`;
                     } else if (pedido.status === 'Em Preparo') {
-                        statusHtml = `
-                            <div style="background:#fff3cd; border-left: 5px solid #ffc107; padding: 10px; border-radius: 8px; margin-top: 10px;">
-                                <p><strong>Status:</strong> <span style="color:#856404; font-weight:bold;">Em Preparo 👨‍🍳</span></p>
-                                <p style="margin-top:5px;">⏳ Tempo estimado: <strong id="cronometro-${id}" style="color: #ff4757;">Calculando...</strong></p>
-                            </div>
-                        `;
-                        iniciarCronometroEspecifico(id, pedido.tempoMinutos || 15);
+                        statusHtml = `<div style="background:#fff3cd; border-left: 5px solid #ffc107; padding: 10px; border-radius: 8px; margin-top: 10px;"><p>Em Preparo 👨‍🍳</p><p>⏳ Tempo: <strong id="cronometro-${pedido.id}" style="color: #ff4757;">Calculando...</strong></p></div>`;
+                        iniciarCronometroEspecifico(pedido.id, pedido.tempoMinutos || 15);
                     } else {
-                        statusHtml = `<div style="background:#f1f2f6; padding: 10px; border-radius: 8px; margin-top: 10px;"><p><strong>Status:</strong> ${pedido.status}</p></div>`;
+                        statusHtml = `<div style="background:#f1f2f6; padding: 10px; border-radius: 8px; margin-top: 10px;"><p>${pedido.status}</p></div>`;
                     }
 
-                    container.innerHTML += `
-                        <div class="card">
-                            <p><strong>Itens:</strong> ${itensHtml}</p>
-                            <p><strong>Pagamento:</strong> ${pedido.pagamento || ''} | <strong style="color:var(--success);">R$ ${(pedido.valorTotal || 0).toFixed(2)}</strong></p>
-                            ${statusHtml}
-                            ${botaoExcluirHtml}
-                        </div>
-                    `;
+                    container.innerHTML += `<div class="card"><p><strong>Itens:</strong> ${itensHtml}</p><p><strong>Pagamento:</strong> ${pedido.pagamento}</p>${statusHtml}${botaoExcluirHtml}</div>`;
                 });
             });
         }
@@ -1738,15 +1536,8 @@
             let tempoRestante = minutos * 60;
             timerIntervalos[id] = setInterval(() => {
                 let elemento = document.getElementById('cronometro-' + id);
-                if (!elemento) {
-                    clearInterval(timerIntervalos[id]);
-                    return;
-                }
-                if (tempoRestante <= 0) {
-                    elemento.innerText = "Quase pronto!";
-                    clearInterval(timerIntervalos[id]);
-                    return;
-                }
+                if (!elemento) { clearInterval(timerIntervalos[id]); return; }
+                if (tempoRestante <= 0) { elemento.innerText = "Quase pronto!"; clearInterval(timerIntervalos[id]); return; }
                 let m = Math.floor(tempoRestante / 60);
                 let s = tempoRestante % 60;
                 elemento.innerText = `${m}m ${s < 10 ? '0' : ''}${s}s`;
@@ -1755,56 +1546,28 @@
         }
 
         async function enviarAvaliacao() {
-            if (!pedidoConcluidoNaoAvaliadoId) {
-                mostrarBannerNotificacao("Nenhum pedido pendente de avaliação.", "#ff4757");
-                return;
-            }
-
+            if (!pedidoConcluidoNaoAvaliadoId) return;
             const nota = document.getElementById('nota-avaliacao').value;
             const comentario = document.getElementById('comentario-avaliacao').value;
             
-            try {
-                await db.collection('avaliacoes').add({
-                    email: usuarioAtual.email,
-                    nota,
-                    comentario,
-                    data: firebase.firestore.FieldValue.serverTimestamp()
-                });
+            await db.collection('avaliacoes').add({ email: usuarioAtual.email, nota, comentario, data: firebase.firestore.FieldValue.serverTimestamp() });
+            await db.collection('pedidos').doc(pedidoConcluidoNaoAvaliadoId).update({ avaliado: true });
 
-                await db.collection('pedidos').doc(pedidoConcluidoNaoAvaliadoId).update({ avaliado: true });
-
-                falarMensagem("Obrigado pela preferência");
-                mostrarBannerNotificacao("Obrigado pela sua avaliação!");
-                
-                document.getElementById('comentario-avaliacao').value = '';
-                pedidoConcluidoNaoAvaliadoId = null;
-                
-                document.getElementById('nav-btn-perfil-avaliacao').style.display = 'none';
-                mudarAbaCliente('vitrine');
-
-            } catch (error) {
-                mostrarBannerNotificacao("Erro ao enviar avaliação: " + error.message, "#ff4757");
-            }
+            falarMensagem("Obrigado pela preferência");
+            mostrarBannerNotificacao("Obrigado pela sua avaliação!");
+            document.getElementById('comentario-avaliacao').value = '';
+            pedidoConcluidoNaoAvaliadoId = null;
+            document.getElementById('nav-btn-perfil-avaliacao').style.display = 'none';
+            mudarAbaCliente('vitrine');
         }
 
         function carregarAvaliacoesAdmin() {
-            const container = document.getElementById('lista-avaliacoes-admin');
             db.collection('avaliacoes').orderBy('data', 'desc').onSnapshot(snapshot => {
-                container.innerHTML = '';
-                if (snapshot.empty) {
-                    container.innerHTML = `<p style="text-align:center;">Nenhuma avaliação recebida.</p>`;
-                    return;
-                }
+                const container = document.getElementById('lista-avaliacoes-admin');
+                container.innerHTML = snapshot.empty ? `<p style="text-align:center;">Nenhuma avaliação recebida.</p>` : '';
                 snapshot.forEach(doc => {
                     const av = doc.data();
-                    let estrelas = "⭐".repeat(Number(av.nota));
-                    container.innerHTML += `
-                        <div class="card">
-                            <p><strong>Cliente:</strong> ${av.email}</p>
-                            <p><strong>Nota:</strong> ${estrelas}</p>
-                            <p><strong>Comentário:</strong> "${av.comentario || 'Sem comentário'}"</p>
-                        </div>
-                    `;
+                    container.innerHTML += `<div class="card"><p><strong>Cliente:</strong> ${av.email}</p><p><strong>Nota:</strong> ${"⭐".repeat(Number(av.nota))}</p><p>"${av.comentario || 'Sem comentário'}"</p></div>`;
                 });
             });
         }
@@ -1826,7 +1589,7 @@
                     destino, titulo, valorDesconto, tempoValidadeMinutos, texto,
                     data: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                mostrarBannerNotificacao("Cupom gerado com tempo de expiração e enviado!");
+                mostrarBannerNotificacao("Cupom exclusivo enviado com sucesso!");
                 document.getElementById('adm-titulo-promo').value = '';
                 document.getElementById('adm-valor-desconto').value = '';
                 document.getElementById('adm-texto-promo').value = '';
@@ -1836,27 +1599,19 @@
         }
 
         function carregarCuponsAdmin() {
-            const container = document.getElementById('lista-cupons-admin');
             db.collection('promocoes').orderBy('data', 'desc').onSnapshot(snapshot => {
-                container.innerHTML = '';
-                if (snapshot.empty) {
-                    container.innerHTML = `<p style="text-align:center;">Nenhum cupom ativo no momento.</p>`;
-                    return;
-                }
+                const container = document.getElementById('lista-cupons-admin');
+                container.innerHTML = snapshot.empty ? `<p style="text-align:center;">Nenhum cupom ativo.</p>` : '';
                 snapshot.forEach(doc => {
                     let c = doc.data();
-                    let id = doc.id;
-                    let destinoTxt = c.destino === 'todos' ? '🌐 Todos' : `👤 ${c.destino}`;
-                    
                     container.innerHTML += `
                         <div class="card" style="border-left: 5px solid var(--primary); margin-bottom: 10px;">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <h3>🎁 ${c.titulo}</h3>
-                                <button class="btn-primary" style="background: #ff4757; width: auto; padding: 6px 12px; font-size: 0.85rem; margin:0;" onclick="excluirCupomAdmin('${id}')">🗑️ Excluir</button>
+                                <button class="btn-primary" style="background: #ff4757; width: auto; padding: 6px 12px; font-size: 0.85rem; margin:0;" onclick="excluirCupomAdmin('${doc.id}')">🗑️ Excluir</button>
                             </div>
-                            <p style="margin: 5px 0;"><strong>Destino:</strong> ${destinoTxt}</p>
-                            <p style="margin: 5px 0;"><strong>Desconto:</strong> R$ ${(c.valorDesconto || 0).toFixed(2)} | <strong>Validade:</strong> ${c.tempoValidadeMinutos || 30} min</p>
-                            <p style="color: #666; font-size: 0.9rem;">${c.texto}</p>
+                            <p style="margin: 5px 0;"><strong>Destino:</strong> ${c.destino === 'todos' ? '🌐 Todos' : c.destino}</p>
+                            <p style="margin: 5px 0;"><strong>Desconto:</strong> R$ ${(c.valorDesconto || 0).toFixed(2)}</p>
                         </div>
                     `;
                 });
@@ -1864,50 +1619,8 @@
         }
 
         async function excluirCupomAdmin(id) {
-            try {
-                await db.collection('promocoes').doc(id).delete();
-                mostrarBannerNotificacao("Cupom excluído e removido dos clientes.");
-            } catch (error) {
-                mostrarBannerNotificacao("Erro ao excluir cupom", "#ff4757");
-            }
-        }
-
-        function carregarPromocoesCliente() {
-            const container = document.getElementById('lista-promocoes-cliente');
-            db.collection('promocoes').onSnapshot(snapshot => {
-                container.innerHTML = '';
-                let meusCupons = [];
-                let agoraMs = Date.now();
-
-                snapshot.forEach(doc => {
-                    let p = doc.data();
-                    if (p.data && p.tempoValidadeMinutos) {
-                        let criacaoMs = p.data.toDate().getTime();
-                        let expiracaoMs = criacaoMs + (p.tempoValidadeMinutos * 60 * 1000);
-                        if (agoraMs > expiracaoMs) return; 
-                    }
-
-                    if (p.destino === 'todos' || p.destino === usuarioAtual.email) {
-                        meusCupons.push(p);
-                    }
-                });
-
-                if (meusCupons.length === 0) {
-                    container.innerHTML = `<div class="card"><p style="text-align:center;">Nenhum cupom disponível no momento.</p></div>`;
-                    return;
-                }
-
-                meusCupons.forEach(p => {
-                    container.innerHTML += `
-                        <div class="card" style="border-left: 5px solid var(--primary);">
-                            <h3>🎁 ${p.titulo} (${p.destino === 'todos' ? 'Geral' : 'Exclusivo para você'})</h3>
-                            <p style="margin: 6px 0;">Desconto: <strong>R$ ${(p.valorDesconto || 0).toFixed(2)}</strong></p>
-                            <p style="color: #666; font-size: 0.85rem; margin-bottom: 6px;">⏱️ Válido por ${p.tempoValidadeMinutos || 3} minutos após gerado.</p>
-                            <p>${p.texto}</p>
-                        </div>
-                    `;
-                });
-            });
+            await db.collection('promocoes').doc(id).delete();
+            mostrarBannerNotificacao("Cupom excluído.");
         }
     </script>
 </body>
