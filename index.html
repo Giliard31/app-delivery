@@ -336,7 +336,7 @@
             <span id="app-title">Olá, Visitante!</span>
         </div>
         <div style="display: flex; gap: 8px; align-items: center;">
-            <button id="btn-login-topo" class="btn-topo" onclick="abrirTelaLogin()">Entrar</button>
+            <button id="btn-login-topo" class="btn-topo" onclick="irParaLoginTopo()">Entrar</button>
             <button id="btn-perfil-topo" class="btn-topo" style="display:none;" onclick="togglePerfilTopo()">👤 Perfil</button>
             <button id="btn-sair" class="btn-topo" style="display:none;" onclick="fazerLogout()">Sair</button>
         </div>
@@ -346,7 +346,6 @@
         <!-- ================= TELA DE LOGIN / CADASTRO ================= -->
         <div id="view-auth" class="view-section">
             <div id="auth-container" class="card">
-                <button class="btn-primary" style="background: #747d8c; margin-bottom: 15px; padding: 8px 12px; font-size: 0.85rem; width: auto;" onclick="voltarParaCardapio()">← Voltar ao Cardápio</button>
                 <h2 id="auth-titulo" style="text-align: center; margin-bottom: 15px;">Entrar no App</h2>
                 
                 <input type="email" id="auth-email" placeholder="Seu e-mail">
@@ -363,6 +362,7 @@
 
                 <button id="btn-acao-auth" class="btn-primary" onclick="fazerLogin()">Entrar</button>
                 <button id="btn-alternar-auth" class="btn-primary" style="background: #747d8c; margin-top: 10px;" onclick="alternarTelaCadastro()">Quero me Cadastrar</button>
+                <button class="btn-primary" style="background: #a4b0be; margin-top: 10px;" onclick="voltarParaVitrineDois()">Voltar ao Cardápio</button>
                 
                 <p id="bloco-esqueci-senha" style="text-align: center; margin-top: 15px;">
                     <a href="#" onclick="esqueciSenha()" style="color: var(--primary); text-decoration: none; font-size: 0.95rem;">Esqueceu a senha? Clique aqui</a>
@@ -392,7 +392,7 @@
                 <h2>Meus Pedidos</h2>
                 <p style="color: #666; margin-bottom: 15px; font-size: 0.95rem;">Acompanhe o status do seu pedido em tempo real:</p>
                 <div id="lista-pedidos-cliente">
-                    <p style="text-align:center;">Você precisa entrar na conta para ver seus pedidos.</p>
+                    <p style="text-align:center;">Você ainda não fez nenhum pedido.</p>
                 </div>
             </div>
 
@@ -592,7 +592,7 @@
     </main>
 
     <!-- Menu Inferior do Cliente (Apenas aba de avaliação quando necessário) -->
-    <nav id="nav-cliente">
+    <nav id="nav-cliente" style="display:flex;">
         <button id="nav-btn-perfil-avaliacao" onclick="mudarAbaCliente('perfil-avaliacao')" style="display:none;">⭐ Avaliar</button>
     </nav>
 
@@ -645,6 +645,11 @@
         let cupomAplicado = null;
         let ultimoCupomRecebido = "";
 
+        // Carrega o cardápio automaticamente para visitantes e usuários assim que a página abre
+        document.addEventListener("DOMContentLoaded", () => {
+            carregarProdutosCliente();
+        });
+
         async function atualizarSaudacaoTopo(uid) {
             const tituloEl = document.getElementById('app-title');
             if (!uid) {
@@ -681,9 +686,6 @@
             }
         }
 
-        // CARREGA A VITRINE LIVREMENTE AO ABRIR O LINK
-        carregarProdutosCliente();
-
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 usuarioAtual = user;
@@ -701,6 +703,7 @@
                     document.getElementById('nav-admin').style.display = 'flex';
                     document.getElementById('nav-cliente').style.display = 'none';
                     document.getElementById('btn-perfil-topo').style.display = 'none';
+                    document.getElementById('btn-login-topo').style.display = 'none';
                     document.getElementById('app-title').innerText = '🛠️ Painel Admin';
                     mudarAbaAdminSuperior('vitrine');
                     carregarProdutosAdmin();
@@ -726,6 +729,11 @@
             } else {
                 usuarioAtual = null;
                 pararPresencaOnline();
+                document.getElementById('view-cliente').classList.add('active');
+                document.getElementById('view-auth').classList.remove('active');
+                document.getElementById('view-admin').classList.remove('active');
+                document.getElementById('nav-admin').style.display = 'none';
+                document.getElementById('nav-cliente').style.display = 'flex';
                 document.getElementById('btn-sair').style.display = 'none';
                 document.getElementById('btn-perfil-topo').style.display = 'none';
                 document.getElementById('btn-login-topo').style.display = 'block';
@@ -846,13 +854,13 @@
             });
         }
 
-        function abrirTelaLogin() {
+        function irParaLoginTopo() {
             document.getElementById('view-cliente').classList.remove('active');
             document.getElementById('view-admin').classList.remove('active');
             document.getElementById('view-auth').classList.add('active');
         }
 
-        function voltarParaCardapio() {
+        function voltarParaVitrineDois() {
             document.getElementById('view-auth').classList.remove('active');
             document.getElementById('view-cliente').classList.add('active');
             mudarAbaCliente('vitrine');
@@ -869,7 +877,7 @@
             if (modoCadastroAtivo) {
                 campos.style.display = 'block';
                 titulo.innerText = 'Criar Nova Conta';
-                btnAcao.innerText = 'Cadastrar e Continuar';
+                btnAcao.innerText = 'Cadastrar';
                 btnAcao.setAttribute('onclick', 'fazerCadastro()');
                 btnAlternar.innerText = 'Já tenho conta (Entrar)';
                 blocoEsqueci.style.display = 'none';
@@ -886,12 +894,7 @@
         function fazerLogin() {
             const email = document.getElementById('auth-email').value;
             const senha = document.getElementById('auth-senha').value;
-            auth.signInWithEmailAndPassword(email, senha)
-                .then(() => {
-                    mostrarBannerNotificacao("Login realizado com sucesso!");
-                    voltarParaCardapio();
-                })
-                .catch(error => mostrarBannerNotificacao("Erro ao entrar: " + error.message, "#ff4757"));
+            auth.signInWithEmailAndPassword(email, senha).catch(error => mostrarBannerNotificacao("Erro ao entrar: " + error.message, "#ff4757"));
         }
 
         async function fazerCadastro() {
@@ -916,7 +919,6 @@
                     atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 mostrarBannerNotificacao("Conta criada com sucesso!");
-                voltarParaCardapio();
             } catch (error) {
                 mostrarBannerNotificacao("Erro ao cadastrar: " + error.message, "#ff4757");
             }
@@ -924,10 +926,7 @@
 
         function fazerLogout() {
             pararPresencaOnline();
-            auth.signOut().then(() => {
-                mostrarBannerNotificacao("Você saiu da conta.");
-                mudarAbaCliente('vitrine');
-            });
+            auth.signOut().then(() => mostrarBannerNotificacao("Você saiu da conta."));
         }
 
         function esqueciSenha() {
@@ -942,6 +941,10 @@
         }
 
         async function togglePerfilTopo() {
+            if (!usuarioAtual) {
+                irParaLoginTopo();
+                return;
+            }
             const tabPerfil = document.getElementById('tab-perfil');
             const estaVisivel = tabPerfil.style.display === 'block';
 
@@ -949,20 +952,18 @@
                 mudarAbaCliente('vitrine');
             } else {
                 mudarAbaCliente('perfil');
-                if (usuarioAtual) {
-                    try {
-                        const doc = await db.collection('usuarios').doc(usuarioAtual.uid).get();
-                        if (doc.exists) {
-                            const d = doc.data();
-                            document.getElementById('perfil-nome').value = d.nome || '';
-                            document.getElementById('perfil-telefone').value = d.telefone || '';
-                            document.getElementById('perfil-endereco').value = d.endereco || '';
-                            document.getElementById('perfil-bairro').value = d.bairro || '';
-                            document.getElementById('perfil-cidade').value = d.cidade || '';
-                            document.getElementById('perfil-referencia').value = d.referencia || '';
-                        }
-                    } catch (e) {}
-                }
+                try {
+                    const doc = await db.collection('usuarios').doc(usuarioAtual.uid).get();
+                    if (doc.exists) {
+                        const d = doc.data();
+                        document.getElementById('perfil-nome').value = d.nome || '';
+                        document.getElementById('perfil-telefone').value = d.telefone || '';
+                        document.getElementById('perfil-endereco').value = d.endereco || '';
+                        document.getElementById('perfil-bairro').value = d.bairro || '';
+                        document.getElementById('perfil-cidade').value = d.cidade || '';
+                        document.getElementById('perfil-referencia').value = d.referencia || '';
+                    }
+                } catch (e) {}
             }
         }
 
@@ -996,6 +997,13 @@
         }
 
         function mudarAbaCliente(aba) {
+            // Se o usuário clicar em pedidos ou carrinho sem estar logado, joga para o login
+            if ((aba === 'pedidos-cliente' || aba === 'carrinho') && !usuarioAtual) {
+                mostrarBannerNotificacao("Faça login ou cadastre-se para ver seus pedidos e carrinho!", "#ffa502");
+                irParaLoginTopo();
+                return;
+            }
+
             document.querySelectorAll('.cliente-tab').forEach(el => el.style.display = 'none');
             document.querySelectorAll('.top-subnav button').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('#nav-cliente button').forEach(el => el.classList.remove('active'));
@@ -1245,6 +1253,13 @@
         }
 
         function alterarQtdProduto(nome, preco, delta) {
+            // Se tentar adicionar ao carrinho e não estiver logado, direciona para o cadastro/login para converter o visitante!
+            if (!usuarioAtual && delta > 0) {
+                mostrarBannerNotificacao("Faça seu cadastro para adicionar itens e comprar!", "#ffa502");
+                irParaLoginTopo();
+                return;
+            }
+
             let item = carrinho.find(i => i.name === nome);
             if (item) {
                 item.quantidade += delta;
@@ -1317,6 +1332,12 @@
         }
 
         async function aplicarCupomCliente() {
+            if (!usuarioAtual) {
+                mostrarBannerNotificacao("Faça login para aplicar cupons.", "#ffa502");
+                irParaLoginTopo();
+                return;
+            }
+
             let codigo = document.getElementById('input-codigo-cupom').value.trim().toUpperCase();
             const msgEl = document.getElementById('status-cupom-msg');
 
@@ -1343,7 +1364,7 @@
                         let expiracaoMs = d.data.toDate().getTime() + (d.tempoValidadeMinutos * 60 * 1000);
                         if (Date.now() > expiracaoMs) return; 
                     }
-                    if (d.destino === 'todos' || (usuarioAtual && d.destino === usuarioAtual.email)) {
+                    if (d.destino === 'todos' || d.destino === usuarioAtual.email) {
                         cupomValido = d;
                     }
                 });
@@ -1370,15 +1391,14 @@
         }
 
         async function finalizarPedido() {
-            if (carrinho.length === 0) {
-                mostrarBannerNotificacao("O carrinho está vazio!", "#ff4757");
+            if (!usuarioAtual) {
+                mostrarBannerNotificacao("Você precisa estar cadastrado para finalizar o pedido!", "#ffa502");
+                irParaLoginTopo();
                 return;
             }
 
-            // EXIGE LOGIN SOMENTE AQUI: Ao clicar em finalizar pedido, se não estiver logado, abre o login/cadastro.
-            if (!usuarioAtual) {
-                mostrarBannerNotificacao("Faça login ou cadastre-se para concluir o pedido.", "#ffa502");
-                abrirTelaLogin();
+            if (carrinho.length === 0) {
+                mostrarBannerNotificacao("O carrinho está vazio!", "#ff4757");
                 return;
             }
             
@@ -1543,10 +1563,7 @@
         }
 
         function carregarPedidosCliente() {
-            if (!usuarioAtual) {
-                document.getElementById('lista-pedidos-cliente').innerHTML = `<div class="card"><p style="text-align:center;">Você precisa entrar na conta para ver seus pedidos.</p></div>`;
-                return;
-            }
+            if (!usuarioAtual) return;
             const container = document.getElementById('lista-pedidos-cliente');
             let primeiroCarregamento = true;
 
