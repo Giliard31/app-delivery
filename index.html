@@ -536,6 +536,9 @@
             <!-- Admin: Avaliações -->
             <div id="admin-tab-avaliacoes" class="admin-tab" style="display:none;">
                 <h2>Avaliações dos Clientes</h2>
+                <div class="card" style="background: #fff3cd; border-left: 5px solid #ffc107; padding: 12px; margin-bottom: 15px;">
+                    <button class="btn-primary" style="background: #ff4757; margin: 0; padding: 10px; font-size: 0.95rem;" onclick="zerarAvaliacoesAdmin()">🗑️ Zerar / Limpar Todas as Avaliações</button>
+                </div>
                 <div id="lista-avaliacoes-admin">
                     <p style="text-align:center;">Carregando avaliações...</p>
                 </div>
@@ -797,7 +800,6 @@
                     mostrarBannerNotificacao("Cupom copiado para a área de transferência!");
                 }).catch(() => {});
                 
-                // Vai direto pra tela do carrinho e cola no input
                 mudarAbaCliente('carrinho');
                 document.getElementById('input-codigo-cupom').value = ultimoCupomRecebido;
                 aplicarCupomCliente();
@@ -893,21 +895,6 @@
             auth.sendPasswordResetEmail(email)
                 .then(() => mostrarBannerNotificacao("E-mail de recuperação enviado!"))
                 .catch(error => mostrarBannerNotificacao("Erro: " + error.message, "#ff4757"));
-        }
-
-        async function carregarPerfilCliente() {
-            if (!usuarioAtual) return;
-            try {
-                const doc = await db.collection('usuarios').doc(usuarioAtual.uid).get();
-                if (doc.exists) {
-                    const dados = doc.data();
-                    document.getElementById('perfil-nome').value = dados.nome || '';
-                    document.getElementById('perfil-endereco').value = dados.endereco || '';
-                    document.getElementById('perfil-bairro').value = dados.bairro || '';
-                    document.getElementById('perfil-cidade').value = dados.cidade || '';
-                    document.getElementById('perfil-referencia').value = dados.referencia || '';
-                }
-            } catch (error) {}
         }
 
         async function salvarPerfilCliente() {
@@ -1075,7 +1062,6 @@
             }
         }
 
-        // Funções para alternar o Modo de Edição no Painel Admin (Interface limpa)
         function toggleModoEdicaoAdmin(id) {
             const divEdit = document.getElementById('edit-fields-' + id);
             divEdit.style.display = (divEdit.style.display === 'none' || divEdit.style.display === '') ? 'block' : 'none';
@@ -1131,7 +1117,6 @@
             });
         }
 
-        // CARREGAMENTO DO ADMIN COM A INTERFACE LIMPA (BOTÃO EDITAR / BOTÃO SALVAR)
         function carregarProdutosAdmin() {
             const container = document.getElementById('lista-produtos-admin');
             db.collection('produtos').onSnapshot(snapshot => {
@@ -1151,7 +1136,6 @@
                             <h3>${p.nome}</h3>
                             <p style="color: #2ed573; font-weight: bold; margin: 8px 0;">R$ ${p.preco.toFixed(2)}</p>
                             
-                            <!-- Botões de Ação Rápida: Ocultar/Exibir e Disponível/Indisponível -->
                             <div style="display: flex; gap: 6px; justify-content: center; margin-top: 10px;">
                                 <button class="btn-primary" style="background: ${isDisp ? '#2ed573' : '#ffa502'}; font-size: 0.8rem; padding: 6px; margin:0;" onclick="alterarStatusProduto('${id}', '${isDisp ? 'indisponivel' : 'disponivel'}')">
                                     ${isDisp ? '🟢 Disponível' : '🔴 Oculto'}
@@ -1161,7 +1145,6 @@
                                 </button>
                             </div>
 
-                            <!-- Campos de Edição Ocultos até clicar no botão Editar -->
                             <div id="edit-fields-${id}" style="display: none; margin-top: 12px; border-top: 1px solid #eee; padding-top: 10px; text-align: left;">
                                 <label style="font-size: 0.8rem; font-weight: bold;">Nome:</label>
                                 <input type="text" id="edit-nome-${id}" value="${p.nome}" style="margin: 4px 0 8px 0; padding: 8px; font-size: 0.9rem;">
@@ -1172,7 +1155,6 @@
                                 <label style="font-size: 0.8rem; font-weight: bold;">Link Foto:</label>
                                 <input type="url" id="edit-foto-${id}" value="${p.fotoUrl}" style="margin: 4px 0 8px 0; padding: 8px; font-size: 0.9rem;">
 
-                                <!-- Botão Salvar visível apenas no modo de edição -->
                                 <button class="btn-primary" style="background: #2ed573; font-size: 0.9rem; padding: 10px; margin-top: 5px;" onclick="salvarEdicaoProduto('${id}')">
                                     💾 Salvar Alterações
                                 </button>
@@ -1452,6 +1434,18 @@
             snapshot.forEach(doc => { batch.delete(doc.ref); });
             await batch.commit();
             mostrarBannerNotificacao("Caixa zerado!");
+        }
+
+        async function zerarAvaliacoesAdmin() {
+            const snapshot = await db.collection('avaliacoes').get();
+            if (snapshot.empty) {
+                mostrarBannerNotificacao("Não há avaliações para zerar.", "#ffa502");
+                return;
+            }
+            let batch = db.batch();
+            snapshot.forEach(doc => { batch.delete(doc.ref); });
+            await batch.commit();
+            mostrarBannerNotificacao("Todas as avaliações foram apagadas!");
         }
 
         async function atualizarStatusPedido(id, novoStatus) {
