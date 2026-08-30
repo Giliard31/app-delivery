@@ -257,7 +257,7 @@
 
         #notification-banner {
             position: fixed;
-            top: 70px;
+            top: 80px; /* Ajustado ligeiramente para baixo para garantir visibilidade perfeita */
             left: 50%;
             transform: translateX(-50%);
             background: #2ed573;
@@ -265,7 +265,7 @@
             padding: 12px 20px;
             border-radius: 8px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-            z-index: 1000;
+            z-index: 2500; /* Aumentado para ficar acima de qualquer elemento fixo ou subnav */
             display: none;
             font-weight: bold;
             text-align: center;
@@ -282,7 +282,7 @@
             display: none;
             justify-content: center;
             align-items: center;
-            z-index: 2000;
+            z-index: 3000;
         }
 
         .modal-cupom-content {
