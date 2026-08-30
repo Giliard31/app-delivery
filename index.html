@@ -11,6 +11,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="img/icone-192.png">
 
+    <!-- Biblioteca de Confetes -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
     <style>
         :root {
             --primary: #ff4757;
@@ -240,6 +243,36 @@
             max-width: 90%;
         }
 
+        /* Modal de Cupom com Confetes */
+        #modal-cupom-ganho {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal-cupom-content {
+            background: white;
+            padding: 30px 20px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 340px;
+            width: 90%;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            animation: escalaModal 0.3s ease-in-out;
+        }
+
+        @keyframes escalaModal {
+            0% { transform: scale(0.7); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
         @keyframes andarMoto {
             0% { transform: translateX(0px); }
             50% { transform: translateX(120px); }
@@ -261,6 +294,17 @@
 <body>
 
     <div id="notification-banner">🔔 Notificação</div>
+
+    <!-- Modal de Cupom Premiado -->
+    <div id="modal-cupom-ganho">
+        <div class="modal-cupom-content">
+            <div style="font-size: 3rem; margin-bottom: 10px;">🎉</div>
+            <h2 style="color: var(--primary); margin-bottom: 8px;">Você ganhou um cupom!</h2>
+            <p id="texto-modal-cupom" style="color: #57606f; font-size: 0.95rem; margin-bottom: 15px;">Aproveite o desconto especial liberado para você agora.</p>
+            <div id="codigo-modal-destaque" style="background: #f1f2f6; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 1.2rem; color: var(--text); margin-bottom: 15px; letter-spacing: 1px;">CUPOM</div>
+            <button class="btn-primary" onclick="fecharModalCupom()">Aproveitar Agora</button>
+        </div>
+    </div>
 
     <header>
         <span id="app-title">🍔 Meu Delivery</span>
@@ -652,6 +696,7 @@
                     carregarPedidosCliente();
                     carregarPerfilCliente();
                     ouvirNotificacoesNovosPratos();
+                    ouvirCuponsNovosCliente(); // Escuta cupons em tempo real para disparar confetes e modal
                 }
             } else {
                 usuarioAtual = null;
@@ -744,6 +789,49 @@
             banner.style.background = cor;
             banner.style.display = 'block';
             setTimeout(() => { banner.style.display = 'none'; }, 4000);
+        }
+
+        // Funções do Modal de Cupom com Confetes
+        function dispararChuvaConfetes() {
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 120,
+                    spread: 80,
+                    origin: { y: 0.5 }
+                });
+            }
+        }
+
+        function exibirModalCupomGanho(codigo, textoDescricao) {
+            document.getElementById('codigo-modal-destaque').innerText = codigo;
+            document.getElementById('texto-modal-cupom').innerText = textoDescricao || "Aproveite o desconto especial liberado para você.";
+            document.getElementById('modal-cupom-ganho').style.display = 'flex';
+            dispararChuvaConfetes();
+            falarMensagem("Você ganhou um cupom. Aproveite!");
+            dispararPushNativo("🎁 Cupom Liberado!", `Você ganhou o cupom ${codigo}. Aproveite!`);
+        }
+
+        function fecharModalCupom() {
+            document.getElementById('modal-cupom-ganho').style.display = 'none';
+        }
+
+        // Ouvir novos cupons em tempo real para o cliente logado
+        function ouvirCuponsNovosCliente() {
+            let primeiraVez = true;
+            db.collection('promocoes').orderBy('data', 'desc').limit(1).onSnapshot(snapshot => {
+                if (primeiraVez) {
+                    primeiraVez = false;
+                    return;
+                }
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === 'added') {
+                        let c = change.doc.data();
+                        if (c.destino === 'todos' || c.destino === usuarioAtual.email) {
+                            exibirModalCupomGanho(c.titulo, c.texto);
+                        }
+                    }
+                });
+            });
         }
 
         function alternarTelaCadastro() {
