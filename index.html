@@ -530,7 +530,7 @@
 
             <!-- Admin: Pedidos Ativos -->
             <div id="admin-tab-pedidos" class="admin-tab" style="display:none;">
-                <h2>Pedidos em Curso</h2>
+                <h2>Pedidos em Curso (Com opção de Edição)</h2>
                 <div id="lista-pedidos-admin">
                     <p style="text-align:center;">Nenhum pedido no momento.</p>
                 </div>
@@ -972,7 +972,6 @@
                     atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
                 
-                // Atualiza o primeiro nome imediatamente no topo após salvar alterações
                 await atualizarSaudacaoTopo(usuarioAtual.uid);
 
                 mostrarBannerNotificacao("Perfil atualizado com sucesso!");
@@ -1388,6 +1387,7 @@
             }
         }
 
+        // ================= FUNÇÃO ATUALIZADA: CARREGAR E EDITAR PEDIDOS NO ADMIN =================
         function carregarPedidosAdmin() {
             const container = document.getElementById('lista-pedidos-admin');
             db.collection('pedidos').orderBy('data', 'desc').onSnapshot(snapshot => {
@@ -1399,25 +1399,57 @@
                     
                     if (p.status !== 'Concluído') {
                         temAtivos = true;
-                        let itensHtml = p.itens ? p.itens.map(i => `${i.name} (x${i.quantidade})`).join(', ') : '';
                         let dataFormatada = p.data && p.data.toDate ? p.data.toDate().toLocaleString('pt-BR') : 'Horário não registrado';
+
+                        // Monta a lista de itens editáveis em tabela para o painel admin
+                        let itensEdicaoHtml = '';
+                        if (p.itens && p.itens.length > 0) {
+                            p.itens.forEach((item, itemIndex) => {
+                                itensEdicaoHtml += `
+                                    <tr style="border-bottom: 1px solid #ddd; font-size: 0.9rem;">
+                                        <td style="padding: 6px;">${item.name}</td>
+                                        <td style="padding: 6px;"><input type="number" id="adm-item-qtd-${id}-${itemIndex}" value="${item.quantidade}" min="1" style="width: 60px; padding: 4px; text-align: center;" onchange="recalcularTotalAdmin('${id}')"></td>
+                                        <td style="padding: 6px;"><input type="number" id="adm-item-preco-${id}-${itemIndex}" value="${item.price.toFixed(2)}" step="0.01" style="width: 80px; padding: 4px; text-align: right;" onchange="recalcularTotalAdmin('${id}')"></td>
+                                    </tr>
+                                `;
+                            });
+                        }
 
                         container.innerHTML += `
                             <div class="card" style="border-left: 5px solid var(--primary);">
                                 <p><strong>Cliente:</strong> ${p.clienteNome || 'Anônimo'} (${p.clienteEmail})</p>
                                 <p style="background: #f8f9fa; padding: 8px; border-radius: 6px; margin: 6px 0;">
-                                    🕒 <strong>Horário do Pedido:</strong> ${dataFormatada}<br>
+                                    🕒 <strong>Horário:</strong> ${dataFormatada}<br>
                                     📍 <strong>Endereço:</strong> ${p.enderecoEntrega || 'Não informado'}<br>
                                     🗺️ <strong>Referência:</strong> ${p.referencia || 'Nenhuma'}
                                 </p>
-                                <p><strong>Itens:</strong> ${itensHtml}</p>
-                                ${p.cupomUsado ? `<p><strong>Cupom:</strong> ${p.cupomUsado}</p>` : ''}
-                                <p><strong>Pagamento:</strong> ${p.pagamento || ''} | <strong style="color:var(--success);">R$ ${(p.valorTotal || 0).toFixed(2)}</strong></p>
-                                <p><strong>Troco:</strong> ${p.detalheTroco || 'Não informado'}</p>
+                                
+                                <p style="margin-top: 10px; font-weight: bold;">Gerenciar / Editar Itens do Pedido:</p>
+                                <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+                                    <thead>
+                                        <tr style="text-align: left; font-size: 0.85rem; color: #666; border-bottom: 2px solid #ddd;">
+                                            <th style="padding: 4px;">Produto</th>
+                                            <th style="padding: 4px;">Qtd</th>
+                                            <th style="padding: 4px;">Preço Unit. (R$)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="adm-tabela-itens-${id}">
+                                        ${itensEdicaoHtml}
+                                    </tbody>
+                                </table>
+
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: #f1f2f6; padding: 8px; border-radius: 6px;">
+                                    <span><strong>Valor Total Editável:</strong></span>
+                                    <input type="number" id="adm-valortotal-${id}" value="${(p.valorTotal || 0).toFixed(2)}" step="0.01" style="width: 110px; padding: 6px; text-align: right; font-weight: bold; color: var(--success); margin: 0;">
+                                </div>
+
+                                <p><strong>Pagamento:</strong> ${p.pagamento || ''} | <strong>Troco:</strong> ${p.detalheTroco || 'Não informado'}</p>
                                 <p><strong>Status Atual:</strong> <span style="color: #ff4757; font-weight: bold;">${p.status}</span></p>
                                 
                                 <div style="margin-top: 12px; border-top: 1px solid #eee; padding-top: 10px;">
-                                    <input type="number" id="tempo-${id}" placeholder="Minutos para entrega" style="margin-bottom: 5px;" value="${p.tempoMinutos || 15}">
+                                    <button class="btn-primary" style="background: #3742fa; margin-bottom: 5px;" onclick="salvarEdicaoPedidoAdmin('${id}', ${p.itens ? p.itens.length : 0})">💾 Salvar Alterações de Valores/Itens</button>
+                                    
+                                    <input type="number" id="tempo-${id}" placeholder="Minutos para entrega" style="margin-bottom: 5px; margin-top: 8px;" value="${p.tempoMinutos || 15}">
                                     <button class="btn-primary" style="background:#ffa502; margin-bottom: 5px;" onclick="atualizarStatusPedido('${id}', 'Em Preparo')">👨‍🍳 Em Preparo (Definir Tempo)</button>
                                     <button class="btn-primary" style="background:#2ed573; margin-bottom: 5px;" onclick="atualizarStatusPedido('${id}', 'Saiu para Entrega')">🛵 Saiu para Entrega</button>
                                     <button class="btn-primary" style="background:#3742fa;" onclick="atualizarStatusPedido('${id}', 'Concluído')">✅ Concluído (Enviar para o Caixa)</button>
@@ -1430,6 +1462,62 @@
                     container.innerHTML = `<p style="text-align:center;">Nenhum pedido em curso no momento.</p>`;
                 }
             });
+        }
+
+        // Função para recalcular automaticamente o total ao alterar quantidade ou preço unitário na tela do admin
+        function recalcularTotalAdmin(idPedido) {
+            // Procura os elementos da tabela e faz o somatório atualizado
+            const tabela = document.getElementById(`adm-tabela-itens-${idPedido}`);
+            if (!tabela) return;
+            
+            let novoTotal = 0;
+            // Como conhecemos a estrutura, iteramos pelas linhas ou pegamos inputs dinamicamente
+            let linhas = tabela.querySelectorAll('tr');
+            linhas.forEach((_, index) => {
+                const inputQtd = document.getElementById(`adm-item-qtd-${idPedido}-${index}`);
+                const inputPreco = document.getElementById(`adm-item-preco-${idPedido}-${index}`);
+                if (inputQtd && inputPreco) {
+                    let qtd = parseInt(inputQtd.value) || 0;
+                    let preco = parseFloat(inputPreco.value) || 0;
+                    novoTotal += (qtd * preco);
+                }
+            });
+
+            const inputTotalFinal = document.getElementById(`adm-valortotal-${idPedido}`);
+            if (inputTotalFinal) {
+                inputTotalFinal.value = novoTotal.toFixed(2);
+            }
+        }
+
+        // Função para salvar as modificações do admin no banco de dados
+        async function salvarEdicaoPedidoAdmin(idPedido, totalItens) {
+            let novosItens = [];
+            let novoValorTotal = parseFloat(document.getElementById(`adm-valortotal-${idPedido}`).value) || 0;
+
+            for (let i = 0; i < totalItens; i++) {
+                const inputQtd = document.getElementById(`adm-item-qtd-${idPedido}-${i}`);
+                const inputPreco = document.getElementById(`adm-item-preco-${idPedido}-${i}`);
+                
+                if (inputQtd && inputPreco) {
+                    // Recuperamos o nome do item a partir da própria linha da tabela
+                    let nomeItem = inputQtd.closest('tr').cells[0].innerText;
+                    novosItens.push({
+                        name: nomeItem,
+                        quantidade: parseInt(inputQtd.value) || 1,
+                        price: parseFloat(inputPreco.value) || 0
+                    });
+                }
+            }
+
+            try {
+                await db.collection('pedidos').doc(idPedido).update({
+                    itens: novosItens,
+                    valorTotal: novoValorTotal
+                });
+                mostrarBannerNotificacao("Alterações salvas com sucesso no pedido!");
+            } catch (error) {
+                mostrarBannerNotificacao("Erro ao salvar alterações: " + error.message, "#ff4757");
+            }
         }
 
         function carregarCaixaAdmin() {
@@ -1606,7 +1694,7 @@
                     container.innerHTML += `
                         <div class="card">
                             <p><strong>Itens:</strong> ${itensHtml}</p>
-                            <p><strong>Pagamento:</strong> ${pedido.pagamento || ''}</p>
+                            <p><strong>Pagamento:</strong> ${pedido.pagamento || ''} | <strong style="color:var(--success);">R$ ${(pedido.valorTotal || 0).toFixed(2)}</strong></p>
                             ${statusHtml}
                             ${botaoExcluirHtml}
                         </div>
