@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+[source: 1]<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -336,6 +336,7 @@
             <span id="app-title">Olá, Visitante!</span>
         </div>
         <div style="display: flex; gap: 8px; align-items: center;">
+            <button id="btn-login-topo" class="btn-topo" onclick="abrirTelaLogin()">Entrar</button>
             <button id="btn-perfil-topo" class="btn-topo" style="display:none;" onclick="togglePerfilTopo()">👤 Perfil</button>
             <button id="btn-sair" class="btn-topo" style="display:none;" onclick="fazerLogout()">Sair</button>
         </div>
@@ -343,8 +344,9 @@
 
     <main>
         <!-- ================= TELA DE LOGIN / CADASTRO ================= -->
-        <div id="view-auth" class="view-section active">
+        <div id="view-auth" class="view-section">
             <div id="auth-container" class="card">
+                <button class="btn-primary" style="background: #747d8c; margin-bottom: 15px; padding: 8px 12px; font-size: 0.85rem; width: auto;" onclick="voltarParaCardapio()">← Voltar ao Cardápio</button>
                 <h2 id="auth-titulo" style="text-align: center; margin-bottom: 15px;">Entrar no App</h2>
                 
                 <input type="email" id="auth-email" placeholder="Seu e-mail">
@@ -369,7 +371,7 @@
         </div>
 
         <!-- ================= VISÃO DO CLIENTE ================= -->
-        <div id="view-cliente" class="view-section">
+        <div id="view-cliente" class="view-section active">
             
             <div class="top-subnav">
                 <button id="btn-subnav-vitrine" class="active" onclick="mudarAbaCliente('vitrine')">🏠 Cardápio</button>
@@ -390,7 +392,7 @@
                 <h2>Meus Pedidos</h2>
                 <p style="color: #666; margin-bottom: 15px; font-size: 0.95rem;">Acompanhe o status do seu pedido em tempo real:</p>
                 <div id="lista-pedidos-cliente">
-                    <p style="text-align:center;">Você ainda não fez nenhum pedido.</p>
+                    <p style="text-align:center;">Você precisa entrar na conta para ver seus pedidos.</p>
                 </div>
             </div>
 
@@ -590,7 +592,7 @@
     </main>
 
     <!-- Menu Inferior do Cliente (Apenas aba de avaliação quando necessário) -->
-    <nav id="nav-cliente" style="display:none;">
+    <nav id="nav-cliente">
         <button id="nav-btn-perfil-avaliacao" onclick="mudarAbaCliente('perfil-avaliacao')" style="display:none;">⭐ Avaliar</button>
     </nav>
 
@@ -679,12 +681,16 @@
             }
         }
 
+        // CARREGA A VITRINE LIVREMENTE AO ABRIR O LINK
+        carregarProdutosCliente();
+
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 usuarioAtual = user;
                 document.getElementById('view-auth').classList.remove('active');
                 document.getElementById('btn-sair').style.display = 'block';
                 document.getElementById('btn-perfil-topo').style.display = 'block';
+                document.getElementById('btn-login-topo').style.display = 'none';
                 
                 solicitarPermissaoNotificacaoAutomatica();
                 iniciarPresencaOnline();
@@ -720,13 +726,9 @@
             } else {
                 usuarioAtual = null;
                 pararPresencaOnline();
-                document.getElementById('view-auth').classList.add('active');
-                document.getElementById('view-cliente').classList.remove('active');
-                document.getElementById('view-admin').classList.remove('active');
-                document.getElementById('nav-cliente').style.display = 'none';
-                document.getElementById('nav-admin').style.display = 'none';
                 document.getElementById('btn-sair').style.display = 'none';
                 document.getElementById('btn-perfil-topo').style.display = 'none';
+                document.getElementById('btn-login-topo').style.display = 'block';
                 document.getElementById('app-title').innerText = 'Olá, Visitante!';
             }
         });
@@ -836,12 +838,24 @@
                 snapshot.docChanges().forEach(change => {
                     if (change.type === 'added') {
                         let c = change.doc.data();
-                        if (c.destino === 'todos' || c.destino === usuarioAtual.email) {
+                        if (usuarioAtual && (c.destino === 'todos' || c.destino === usuarioAtual.email)) {
                             exibirModalCupomGanho(c.titulo, c.texto);
                         }
                     }
                 });
             });
+        }
+
+        function abrirTelaLogin() {
+            document.getElementById('view-cliente').classList.remove('active');
+            document.getElementById('view-admin').classList.remove('active');
+            document.getElementById('view-auth').classList.add('active');
+        }
+
+        function voltarParaCardapio() {
+            document.getElementById('view-auth').classList.remove('active');
+            document.getElementById('view-cliente').classList.add('active');
+            mudarAbaCliente('vitrine');
         }
 
         function alternarTelaCadastro() {
@@ -855,7 +869,7 @@
             if (modoCadastroAtivo) {
                 campos.style.display = 'block';
                 titulo.innerText = 'Criar Nova Conta';
-                btnAcao.innerText = 'Cadastrar';
+                btnAcao.innerText = 'Cadastrar e Continuar';
                 btnAcao.setAttribute('onclick', 'fazerCadastro()');
                 btnAlternar.innerText = 'Já tenho conta (Entrar)';
                 blocoEsqueci.style.display = 'none';
@@ -872,7 +886,12 @@
         function fazerLogin() {
             const email = document.getElementById('auth-email').value;
             const senha = document.getElementById('auth-senha').value;
-            auth.signInWithEmailAndPassword(email, senha).catch(error => mostrarBannerNotificacao("Erro ao entrar: " + error.message, "#ff4757"));
+            auth.signInWithEmailAndPassword(email, senha)
+                .then(() => {
+                    mostrarBannerNotificacao("Login realizado com sucesso!");
+                    voltarParaCardapio();
+                })
+                .catch(error => mostrarBannerNotificacao("Erro ao entrar: " + error.message, "#ff4757"));
         }
 
         async function fazerCadastro() {
@@ -897,6 +916,7 @@
                     atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 mostrarBannerNotificacao("Conta criada com sucesso!");
+                voltarParaCardapio();
             } catch (error) {
                 mostrarBannerNotificacao("Erro ao cadastrar: " + error.message, "#ff4757");
             }
@@ -904,7 +924,10 @@
 
         function fazerLogout() {
             pararPresencaOnline();
-            auth.signOut().then(() => mostrarBannerNotificacao("Você saiu da conta."));
+            auth.signOut().then(() => {
+                mostrarBannerNotificacao("Você saiu da conta.");
+                mudarAbaCliente('vitrine');
+            });
         }
 
         function esqueciSenha() {
@@ -1030,7 +1053,6 @@
             }
         }
 
-        // Função para abrir e fechar a área de cadastro de novo produto no painel admin
         function toggleFormularioNovoProduto() {
             const container = document.getElementById('container-cadastrar-produto');
             container.style.display = (container.style.display === 'none' || container.style.display === '') ? 'block' : 'none';
@@ -1105,7 +1127,6 @@
                 document.getElementById('adm-nome-produto').value = '';
                 document.getElementById('adm-preco-produto').value = '';
                 document.getElementById('adm-foto-produto').value = '';
-                // Fecha o formulário automaticamente após cadastrar
                 document.getElementById('container-cadastrar-produto').style.display = 'none';
             } catch (error) {
                 mostrarBannerNotificacao("Erro: " + error.message, "#ff4757");
@@ -1322,7 +1343,7 @@
                         let expiracaoMs = d.data.toDate().getTime() + (d.tempoValidadeMinutos * 60 * 1000);
                         if (Date.now() > expiracaoMs) return; 
                     }
-                    if (d.destino === 'todos' || d.destino === usuarioAtual.email) {
+                    if (d.destino === 'todos' || (usuarioAtual && d.destino === usuarioAtual.email)) {
                         cupomValido = d;
                     }
                 });
@@ -1351,6 +1372,13 @@
         async function finalizarPedido() {
             if (carrinho.length === 0) {
                 mostrarBannerNotificacao("O carrinho está vazio!", "#ff4757");
+                return;
+            }
+
+            // AQUI ESTÁ O FLUXO: Se o cliente tentar finalizar e não estiver logado, abre o login/cadastro!
+            if (!usuarioAtual) {
+                mostrarBannerNotificacao("Faça login ou cadastre-se para concluir o pedido.", "#ffa502");
+                abrirTelaLogin();
                 return;
             }
             
@@ -1515,7 +1543,10 @@
         }
 
         function carregarPedidosCliente() {
-            if (!usuarioAtual) return;
+            if (!usuarioAtual) {
+                document.getElementById('lista-pedidos-cliente').innerHTML = `<div class="card"><p style="text-align:center;">Você precisa entrar na conta para ver seus pedidos.</p></div>`;
+                return;
+            }
             const container = document.getElementById('lista-pedidos-cliente');
             let primeiroCarregamento = true;
 
