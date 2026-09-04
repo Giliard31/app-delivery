@@ -7,7 +7,7 @@
   "theme_color": "#ff4757",
   "icons": [
     {
-      "src": "img/icone-192.png",
+      "src": "https://raw.githubusercontent.com/Giliard31/app-delivery/refs/heads/main/img/%C3%ADcone-192.png",
       "sizes": "192x192",
       "type": "image/png"
     }
